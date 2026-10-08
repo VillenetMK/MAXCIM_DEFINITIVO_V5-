@@ -5,6 +5,25 @@ on:
 permissions:
   contents: read
 jobs:
+  education-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r apps/education/requirements.txt pytest
+      - name: Test educational application with isolated SQLite
+        working-directory: apps/education
+        env:
+          DEMO_MODE: 'false'
+          DATABASE_URL: 'sqlite:///:memory:'
+        run: |
+          export MAXCIM_WEBHOOK_SECRET="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+          export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+          export SESSION_TOKEN_ENCRYPTION_KEY="$(python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')"
+          python -m pytest tests -q
   core-and-browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 15

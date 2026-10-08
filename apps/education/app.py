@@ -5212,4 +5212,817 @@ def create_app(test_config: dict | None = None):
         # Una "oración con imágenes" guarda objetos {texto, sustantivos}; para
         # los consumidores que solo quieren el texto (la tarjeta del listado)
         # se devuelve la lista de textos.
-        i
+        if material.es_oracion_imagen:
+            return [item["texto"] for item in material_image_sentences(material)]
+        data = _material_sentences_file(material)
+        if data is not None:
+            return normalize_sentences(data)
+        return split_text_into_sentences(material.path_preguntas or "")
+
+    def _material_bits_file(material):
+        """Raw JSON list stored at uploads/<id>/bits.json, or None if
+        path_preguntas doesn't point at a file we wrote."""
+        raw = material.path_preguntas or ""
+        if not stored_as_material_path(raw):
+            return None
+        try:
+            with open(uploads_abspath(raw), "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            return []
+        return data if isinstance(data, list) else []
+
+    def material_bits_items(material) -> list[dict[str, object]]:
+        """Canonical form for a `bits` material: [{palabra, imagen|None,
+        pregunta}]. `imagen` es la ruta relativa a la carpeta del material
+        (p.ej. "img/mano.png") o None; `pregunta` es lo que el robot dice y
+        muestra por ese bit ("" en los bits guardados antes de existir).
+        Mirrors material_image_sentences, simplified to a single word per item
+        instead of {texto, sustantivos}."""
+        rows = _material_bits_file(material) or []
+        seen: set[str] = set()
+        out: list[dict[str, object]] = []
+        for raw in rows:
+            if not isinstance(raw, dict):
+                continue
+            palabra = " ".join(str(raw.get("palabra") or "").split()).strip()
+            if not palabra:
+                continue
+            key = palabra.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            imagen = str(raw.get("imagen") or "").strip() or None
+            out.append({
+                "palabra": palabra,
+                "imagen": imagen,
+                "pregunta": clean_bit_question(raw.get("pregunta")),
+            })
+            if len(out) >= MAX_BITS_PER_MATERIAL:
+                break
+        return out
+
+    def _material_bits_image_url(material, item_index):
+        scheme = "https" if app.config.get("PREFERRED_URL_SCHEME") == "https" else request.scheme
+        return url_for(
+            "download_material_bit_image",
+            material_id=material.id,
+            i=item_index,
+            _external=True,
+            _scheme=scheme,
+        )
+
+    def _material_bits_image_stored_path(material, rel: str) -> str:
+        base_dir = posixpath.dirname(str(material.path_preguntas or ""))
+        return posixpath.join(base_dir, rel)
+
+    def material_bits_preview(material) -> list[dict[str, object]]:
+        """Vista previa de un material "bits" ya guardado, para la tarjeta de
+        la consola: palabra + imagen firmada (o None si por algún motivo no
+        tiene imagen)."""
+        return [
+            {
+                "palabra": item["palabra"],
+                "imagen_url": (
+                    media_url(_material_bits_image_stored_path(material, item["imagen"]))
+                    if item["imagen"] else None
+                ),
+            }
+            for item in material_bits_items(material)
+        ]
+
+    def serialize_bits(material) -> list[dict[str, object]]:
+        """Robot-facing view: cada palabra con la pregunta que el robot debe
+        hacer (None en los bits guardados sin ella: el robot usa entonces su
+        frase por defecto) y la URL autenticada de su imagen."""
+        return [
+            {
+                "palabra": item["palabra"],
+                "pregunta": item["pregunta"] or None,
+                "imagen_url": (
+                    _material_bits_image_url(material, index) if item["imagen"] else None
+                ),
+            }
+            for index, item in enumerate(material_bits_items(material))
+        ]
+
+    def _material_scenes_stored_path(material, rel: str) -> str:
+        base_dir = posixpath.dirname(str(material.path_texto or ""))
+        return posixpath.join(base_dir, rel)
+
+    def material_scenes_items(material) -> list[dict[str, object]]:
+        """Escenas guardadas de un cuento: [{texto, imagen, audio, duracion_s}],
+        con `imagen` y `audio` relativos a la carpeta del material, leídas de
+        escenas.json. Lista vacía si el cuento no tiene escenas (los cuentos
+        anteriores a esta función tampoco)."""
+        if not material.es_cuento or not material.path_texto:
+            return []
+        try:
+            with open(
+                uploads_abspath(_material_scenes_stored_path(material, "escenas.json")),
+                "r", encoding="utf-8",
+            ) as f:
+                rows = json.load(f)
+        except (OSError, ValueError):
+            return []
+        if not isinstance(rows, list):
+            return []
+        out: list[dict[str, object]] = []
+        for raw in rows:
+            if not isinstance(raw, dict):
+                return []
+            texto = str(raw.get("texto") or "").strip()
+            imagen = str(raw.get("imagen") or "").strip()
+            audio = str(raw.get("audio") or "").strip()
+            if not texto or not imagen or not audio:
+                return []
+            try:
+                duracion = round(float(raw.get("duracion_s")), 2)
+            except (TypeError, ValueError):
+                duracion = None
+            out.append({"texto": texto, "imagen": imagen, "audio": audio, "duracion_s": duracion})
+        return out
+
+    def serialize_scenes(material) -> list[dict[str, object]]:
+        """Vista para el robot: por escena, en orden de lectura, su texto, la
+        duración de su audio y las URL autenticadas de la imagen y del audio.
+        El robot reproduce `audio_url` mostrando `imagen_url` y pasa a la
+        siguiente escena al terminar."""
+        scheme = "https" if app.config.get("PREFERRED_URL_SCHEME") == "https" else request.scheme
+        return [
+            {
+                "indice": index,
+                "texto": item["texto"],
+                "duracion_s": item["duracion_s"],
+                "imagen_url": url_for(
+                    "download_material_scene_image",
+                    material_id=material.id, i=index, _external=True, _scheme=scheme,
+                ),
+                "audio_url": url_for(
+                    "download_material_scene_audio",
+                    material_id=material.id, i=index, _external=True, _scheme=scheme,
+                ),
+            }
+            for index, item in enumerate(material_scenes_items(material))
+        ]
+
+    def _material_resource_url(material, recurso):
+        # Los `*_url` apuntan al endpoint autenticado del robot, no a
+        # /static/: bajarlos exige el secreto compartido y el identificador de
+        # la docente (ver contrato §2.5). Ya no exponen la ruta interna.
+        #
+        # `_external=True` arma la URL con el esquema que ve este proceso, no
+        # el que ve el robot: detrás de un proxy/balanceador que termina TLS
+        # (el caso normal en producción), Flask no sabe que el cliente llegó
+        # por HTTPS y devuelve `http://`, con lo que el robot no puede
+        # descargar (mismo problema que ya resolvía `google_redirect_uri`
+        # para el callback de Google; aquí se aplica el mismo criterio).
+        scheme = "https" if app.config.get("PREFERRED_URL_SCHEME") == "https" else request.scheme
+        return url_for(
+            "download_material_resource",
+            material_id=material.id,
+            recurso=recurso,
+            _external=True,
+            _scheme=scheme,
+        )
+
+    def _material_classification(material):
+        return {
+            "id_periodo": material.id_periodo,
+            "id_tema": material.id_tema,
+            "periodo": (
+                {"id": material.periodo.id, "nombre": material.periodo.nombre}
+                if material.periodo else None
+            ),
+            "tema": (
+                {"id": material.tema.id, "nombre": material.tema.nombre}
+                if material.tema else None
+            ),
+        }
+
+    def serialize_material(material):
+        if material.es_bits:
+            # Puramente presentacional, igual que oracion_imagen: no hay
+            # preguntas/respuestas guardadas para un bit, el robot decide qué
+            # preguntar y evalúa la respuesta por su cuenta.
+            return {
+                "id": material.id,
+                "titulo": material.nombre_material,
+                "tipo_material": material.tipo_material,
+                "fecha_subido": material.fecha_subido.isoformat() if material.fecha_subido else None,
+                "fk_user": material.fk_user,
+                "docente": material.fk_user_name,
+                **_material_classification(material),
+                "bits": serialize_bits(material),
+                "consonante": bits_shared_consonant(material_bits_items(material)),
+                "texto_completo_url": None,
+                "texto_resumen_url": None,
+                "audio_completo_url": None,
+                "preguntas_url": None,
+                "preguntas": [],
+            }
+        if material.es_oracion or material.es_oracion_imagen:
+            is_path = stored_as_material_path(material.path_preguntas or "")
+            payload = {
+                "id": material.id,
+                "titulo": material.nombre_material,
+                "tipo_material": material.tipo_material,
+                "fecha_subido": material.fecha_subido.isoformat() if material.fecha_subido else None,
+                "fk_user": material.fk_user,
+                "docente": material.fk_user_name,
+                **_material_classification(material),
+                "oraciones": material_sentences(material),
+                "oraciones_url": (
+                    _material_resource_url(material, "oraciones") if is_path else None
+                ),
+                "texto_completo_url": None,
+                "texto_resumen_url": None,
+                "audio_completo_url": None,
+                "preguntas_url": None,
+                "preguntas": [],
+            }
+            if material.es_oracion_imagen:
+                # Además del texto plano (clave `oraciones`, común a los dos
+                # tipos), el robot recibe por oración: el texto completo, la
+                # plantilla con marcadores {{0}}/{{1}} y la URL de la imagen de
+                # cada sustantivo, para armar la pantalla.
+                payload["oraciones_detalle"] = serialize_image_sentences(material)
+            return payload
+        try:
+            with open(uploads_abspath(material.path_preguntas), "r", encoding="utf-8") as f:
+                preguntas = json.load(f)
+        except (OSError, ValueError):
+            preguntas = []
+        return {
+            "id": material.id,
+            "titulo": material.nombre_material,
+            "tipo_material": material.tipo_material,
+            "fecha_subido": material.fecha_subido.isoformat() if material.fecha_subido else None,
+            "fk_user": material.fk_user,
+            "docente": material.fk_user_name,
+            **_material_classification(material),
+            "texto_completo_url": _material_resource_url(material, "texto") if material.path_texto else None,
+            "texto_resumen_url": _material_resource_url(material, "resumen") if material.path_texto_resumen else None,
+            "audio_completo_url": _material_resource_url(material, "audio") if material.path_audio else None,
+            "preguntas_url": _material_resource_url(material, "preguntas") if material.path_preguntas else None,
+            "preguntas": preguntas,
+            "escenas": serialize_scenes(material),
+        }
+
+    def robot_teacher_query():
+        """Identificadores de la docente que llegan en la query del robot.
+
+        `docente` es el nombre tal como MAXCIM lo guarda en `fk_user_name`
+        (comparación sin distinguir mayúsculas ni acentos). `teacher_id` (alias
+        `dni`) es el `idPersona` de CIMA y se sigue aceptando como alternativa.
+        El nombre **no es único**: si dos docentes se llaman igual, la consulta
+        devuelve los materiales de ambas.
+        """
+        teacher_id = (request.args.get("teacher_id") or request.args.get("dni") or "").strip()
+        docente = " ".join((request.args.get("docente") or "").split())
+        return teacher_id, docente
+
+    def robot_owner_filter(teacher_id: str, docente: str):
+        if teacher_id:
+            return Material.fk_user == teacher_id
+        return db.func.lower(Material.fk_user_name) == docente.lower()
+
+    def robot_material_belongs(material, teacher_id: str, docente: str) -> bool:
+        if teacher_id:
+            return material.fk_user == teacher_id
+        return bool(material.fk_user_name) and (
+            material.fk_user_name.lower() == docente.lower()
+        )
+
+    def robot_material_or_error(material_id, *, require_identifier: bool):
+        """Carga un material para la API del robot y valida la propiedad por
+        nombre de la docente (o `idPersona`). Devuelve (material, None) o
+        (None, (resp, status))."""
+        teacher_id, docente = robot_teacher_query()
+        if require_identifier and not teacher_id and not docente:
+            return None, (
+                jsonify({"error": "Falta identificar a la docente (docente o teacher_id)."}),
+                400,
+            )
+        material = db.session.get(Material, material_id)
+        if not material:
+            return None, (jsonify({"error": "Material no encontrado."}), 404)
+        if (teacher_id or docente) and not robot_material_belongs(material, teacher_id, docente):
+            return None, (
+                jsonify({"error": "El material no pertenece a esa docente."}),
+                403,
+            )
+        return material, None
+
+    # Robot-side endpoint. Every request must use the shared MAXCIM secret.
+    @app.route("/api/materials", methods=["GET"])
+    def list_materials():
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        teacher_id, docente = robot_teacher_query()
+        if not teacher_id and not docente:
+            return jsonify({
+                "error": "Falta identificar a la docente (docente o teacher_id)."
+            }), 400
+
+        tipo = (request.args.get("tipo") or "").strip().lower()
+        if tipo and tipo not in TIPOS_MATERIAL:
+            return jsonify({"error": "El tipo de material no es válido."}), 400
+
+        query = Material.query.filter(robot_owner_filter(teacher_id, docente))
+        if tipo:
+            query = query.filter_by(tipo_material=tipo)
+        materials = query.order_by(
+            Material.fecha_subido.desc(), Material.id.desc()
+        ).all()
+        return jsonify([serialize_material(m) for m in materials])
+
+    def _resolve_teacher_ids(teacher_id: str, docente: str) -> list[str] | None:
+        """IDs institucionales (`fk_user`) a los que apunta la query del robot.
+        Con `teacher_id` es directo; con `docente` (el nombre) se resuelve a
+        partir de `material.fk_user_name`, así que una docente sin ningún
+        material no se puede ubicar solo por nombre. Devuelve None si no hay
+        forma de resolverla."""
+        if teacher_id:
+            return [teacher_id]
+        rows = (
+            db.session.query(Material.fk_user)
+            .filter(db.func.lower(Material.fk_user_name) == docente.lower())
+            .distinct()
+            .all()
+        )
+        ids = [row[0] for row in rows if row[0]]
+        return ids or None
+
+    def serialize_tema(tema, materiales_count=None):
+        return {
+            "id": tema.id,
+            "nombre": tema.nombre,
+            "fk_user": tema.fk_user,
+            "periodo": (
+                {
+                    "id": tema.periodo.id,
+                    "nombre": tema.periodo.nombre,
+                    "anio": tema.periodo.anio,
+                }
+                if tema.periodo
+                else None
+            ),
+            "materiales_count": materiales_count,
+        }
+
+    # Robot-side endpoint: los temas de una docente (para agrupar sus
+    # materiales en pantalla). Mismo control de acceso que /api/materials:
+    # secreto compartido + identificación de la docente (`teacher_id`/`dni` o
+    # `docente`). Filtro opcional `periodo={id}`.
+    @app.route("/api/temas", methods=["GET"])
+    def list_temas():
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        teacher_id, docente = robot_teacher_query()
+        if not teacher_id and not docente:
+            return jsonify({
+                "error": "Falta identificar a la docente (docente o teacher_id)."
+            }), 400
+
+        teacher_ids = _resolve_teacher_ids(teacher_id, docente)
+        if not teacher_ids:
+            return jsonify([])
+
+        query = Tema.query.filter(Tema.fk_user.in_(teacher_ids))
+        raw_periodo = (request.args.get("periodo") or "").strip()
+        if raw_periodo:
+            try:
+                periodo_id = int(raw_periodo)
+            except (TypeError, ValueError):
+                return jsonify({"error": "El periodo indicado no es válido."}), 400
+            query = query.filter(Tema.id_periodo == periodo_id)
+
+        temas = query.order_by(Tema.id_periodo, Tema.nombre).all()
+
+        counts: dict[int, int] = {}
+        if temas:
+            rows = (
+                db.session.query(Material.id_tema, db.func.count(Material.id))
+                .filter(Material.id_tema.in_([t.id for t in temas]))
+                .group_by(Material.id_tema)
+                .all()
+            )
+            counts = {tema_id: total for tema_id, total in rows}
+
+        return jsonify([serialize_tema(t, counts.get(t.id, 0)) for t in temas])
+
+    @app.route("/api/materials/<int:material_id>", methods=["GET"])
+    def get_material(material_id):
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        # El identificador de la docente (`docente` o `teacher_id`) es
+        # obligatorio y debe coincidir con el dueño del material (hallazgo
+        # A-03): sin esto, con solo el secreto se recorren los IDs enteros y se
+        # descubre a qué docente pertenece cada material.
+        material, error = robot_material_or_error(material_id, require_identifier=True)
+        if error:
+            return error
+        return jsonify(serialize_material(material))
+
+    # Robot-side endpoint: descarga el archivo exacto de un material del docente
+    # para guardarlo en local. Hace falta identificar a la docente (`docente`,
+    # el nombre, o `teacher_id`) y debe coincidir con el dueño del material. Un
+    # `cuento` expone texto/resumen/audio/preguntas; una `oracion`
+    # solo expone `oraciones`.
+    @app.route("/api/materials/<int:material_id>/<recurso>", methods=["GET"])
+    def download_material_resource(material_id, recurso):
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        material, error = robot_material_or_error(material_id, require_identifier=True)
+        if error:
+            return error
+
+        if recurso == "oraciones":
+            if not (material.es_oracion or material.es_oracion_imagen):
+                return jsonify({
+                    "error": "Este material es un cuento; usa texto, resumen, audio "
+                             "o preguntas."
+                }), 404
+            payload = {"oraciones": material_sentences(material)}
+            if material.es_oracion_imagen:
+                payload["oraciones_detalle"] = serialize_image_sentences(material)
+            return jsonify(payload)
+
+        if recurso == "bits":
+            if not material.es_bits:
+                return jsonify({
+                    "error": "Este material no es de tipo bits; usa 'bits' solo para ese tipo."
+                }), 404
+            return jsonify({
+                "bits": serialize_bits(material),
+                "consonante": bits_shared_consonant(material_bits_items(material)),
+            })
+
+        if recurso not in MATERIAL_DOWNLOADS:
+            return jsonify({"error": "Recurso de material no reconocido."}), 404
+        if material.es_oracion or material.es_oracion_imagen:
+            return jsonify({
+                "error": "Este material es una oración; solo expone 'oraciones'."
+            }), 404
+        if material.es_bits:
+            return jsonify({
+                "error": "Este material es de bits; solo expone 'bits'."
+            }), 404
+
+        attr, mimetype, download_name = MATERIAL_DOWNLOADS[recurso]
+        stored_path = getattr(material, attr) or ""
+        if not stored_path:
+            return jsonify({"error": f"El material no tiene {recurso}."}), 404
+        try:
+            abs_path = uploads_abspath(stored_path)  # resuelto + contenido en UPLOADS_ROOT
+        except ValueError:
+            return jsonify({"error": f"No se encontró el archivo de {recurso}."}), 404
+        if not os.path.isfile(abs_path):
+            return jsonify({"error": f"No se encontró el archivo de {recurso}."}), 404
+        return send_file(
+            abs_path,
+            mimetype=mimetype,
+            as_attachment=True,
+            download_name=download_name,
+        )
+
+    # Robot-side endpoint: descarga la imagen de un sustantivo de una "oración
+    # con imágenes" (`<oración>` y `<sustantivo>` son índices 0-based, tal como
+    # llegan en `oraciones_detalle`). Mismo control de acceso que el resto de
+    # la API del robot: secreto compartido + identificación de la docente dueña.
+    @app.route(
+        "/api/materials/<int:material_id>/imagen/<int:s>/<int:n>", methods=["GET"]
+    )
+    def download_material_image(material_id, s, n):
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        material, error = robot_material_or_error(material_id, require_identifier=True)
+        if error:
+            return error
+        if not material.es_oracion_imagen:
+            return jsonify({"error": "Este material no tiene imágenes de oraciones."}), 404
+
+        oraciones = material_image_sentences(material)
+        if not (0 <= s < len(oraciones)) or n not in (0, 1):
+            return jsonify({"error": "Imagen de oración no encontrada."}), 404
+        rel = oraciones[s]["sustantivos"][n]["imagen"]
+        if not rel:
+            return jsonify({"error": "Esta oración se guardó sin imágenes."}), 404
+
+        try:
+            abs_path = uploads_abspath(_material_image_stored_path(material, rel))
+        except ValueError:
+            return jsonify({"error": "Imagen de oración no encontrada."}), 404
+        if not os.path.isfile(abs_path):
+            return jsonify({"error": "Imagen de oración no encontrada."}), 404
+        return send_file(
+            abs_path,
+            mimetype="image/png",
+            as_attachment=True,
+            download_name=f"oracion_{s}_sustantivo_{n}.png",
+        )
+
+    # Robot-side endpoint: descarga la imagen de un bit (`<i>` es el índice
+    # 0-based tal como llega en `bits`). Mismo control de acceso que
+    # download_material_image.
+    @app.route("/api/materials/<int:material_id>/bit-imagen/<int:i>", methods=["GET"])
+    def download_material_bit_image(material_id, i):
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        material, error = robot_material_or_error(material_id, require_identifier=True)
+        if error:
+            return error
+        if not material.es_bits:
+            return jsonify({"error": "Este material no tiene imágenes de bits."}), 404
+
+        items = material_bits_items(material)
+        if not (0 <= i < len(items)):
+            return jsonify({"error": "Imagen de bit no encontrada."}), 404
+        rel = items[i]["imagen"]
+        if not rel:
+            return jsonify({"error": "Este bit se guardó sin imagen."}), 404
+
+        try:
+            abs_path = uploads_abspath(_material_bits_image_stored_path(material, rel))
+        except ValueError:
+            return jsonify({"error": "Imagen de bit no encontrada."}), 404
+        if not os.path.isfile(abs_path):
+            return jsonify({"error": "Imagen de bit no encontrada."}), 404
+        return send_file(
+            abs_path,
+            mimetype="image/png",
+            as_attachment=True,
+            download_name=f"bit_{i}.png",
+        )
+
+    # Robot-side endpoints: imagen y audio de una escena de un cuento (`<i>` es
+    # el índice 0-based tal como llega en `escenas`). Mismo control de acceso
+    # que download_material_bit_image.
+    def _send_material_scene_file(material_id, i, kind):
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        material, error = robot_material_or_error(material_id, require_identifier=True)
+        if error:
+            return error
+        items = material_scenes_items(material)
+        if not (0 <= i < len(items)):
+            return jsonify({"error": "Escena no encontrada."}), 404
+
+        try:
+            abs_path = uploads_abspath(_material_scenes_stored_path(material, items[i][kind]))
+        except ValueError:
+            return jsonify({"error": "Escena no encontrada."}), 404
+        if not os.path.isfile(abs_path):
+            return jsonify({"error": "Escena no encontrada."}), 404
+        if kind == "audio":
+            mimetype, extension = "audio/wav", "wav"
+        else:
+            with open(abs_path, "rb") as f:
+                mimetype = _image_mime_type(f.read(16))
+            extension = {"image/jpeg": "jpg", "image/webp": "webp"}.get(mimetype, "png")
+        return send_file(
+            abs_path,
+            mimetype=mimetype,
+            as_attachment=True,
+            download_name=f"escena_{i}.{extension}",
+        )
+
+    @app.route("/api/materials/<int:material_id>/escena-imagen/<int:i>", methods=["GET"])
+    def download_material_scene_image(material_id, i):
+        return _send_material_scene_file(material_id, i, "imagen")
+
+    @app.route("/api/materials/<int:material_id>/escena-audio/<int:i>", methods=["GET"])
+    def download_material_scene_audio(material_id, i):
+        return _send_material_scene_file(material_id, i, "audio")
+
+    def parse_optional_bool(value):
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"true", "1", "yes", "si", "sí"}:
+                return True
+            if normalized in {"false", "0", "no"}:
+                return False
+        raise ValueError("El valor booleano no es válido.")
+
+    def _interaccion_audio_url(interaccion):
+        # Mismo criterio que _material_resource_url: sin `_scheme` explícito,
+        # detrás de un proxy que termina TLS, `_external=True` devolvería
+        # `http://` (el proceso no ve el HTTPS del cliente).
+        scheme = "https" if app.config.get("PREFERRED_URL_SCHEME") == "https" else request.scheme
+        return url_for(
+            "download_interaccion_audio",
+            interaccion_id=interaccion.id,
+            _external=True,
+            _scheme=scheme,
+        )
+
+    def serialize_interaccion(interaccion):
+        return {
+            "id": interaccion.id,
+            "id_material": interaccion.id_material,
+            "fk_alumno": interaccion.fk_alumno,
+            "fecha_hora": interaccion.fecha_hora.isoformat() if interaccion.fecha_hora else None,
+            "pregunta": interaccion.pregunta,
+            "respuesta": interaccion.respuesta,
+            # URL autenticada al audio que MAXCIM ya almacenó (ver
+            # registrar_interaccion); ya no expone la ruta interna.
+            "audio_rpta_url": _interaccion_audio_url(interaccion),
+            "apreciacion_robot": interaccion.apreciacion_robot,
+            "rpta_correcta": interaccion.rpta_correcta,
+            "periodo": (
+                {"id": interaccion.periodo.id, "nombre": interaccion.periodo.nombre}
+                if interaccion.periodo
+                else None
+            ),
+        }
+
+    # Robot-side endpoint. MAXCIM ya no gestiona sesiones ni reconocimiento
+    # facial: el robot resuelve por su cuenta qué alumno tiene enfrente y qué
+    # material está usando, y reporta cada turno de pregunta/respuesta con
+    # una sola llamada. `multipart/form-data` (no JSON) porque el robot sube
+    # aquí el archivo de audio de la respuesta; MAXCIM lo guarda en
+    # UPLOADS_ROOT igual que hace con el audio de un material (antes solo se
+    # guardaba la ruta de texto que reportaba el robot; ver contrato §2.3).
+    @app.route("/api/interacciones", methods=["POST"])
+    def registrar_interaccion():
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+
+        fk_alumno = str(request.form.get("fk_alumno") or "").strip()
+        pregunta = str(request.form.get("pregunta") or "").strip()
+        respuesta = str(request.form.get("respuesta") or "").strip()
+        apreciacion_robot = str(request.form.get("apreciacion_robot") or "").strip()
+        audio_rpta = request.files.get("audio_rpta")
+
+        # `id_material` es opcional: si falta o llega vacío/null, el turno es
+        # una conversación libre del alumno con MAXCIM (sin material asociado).
+        raw_material_id = request.form.get("id_material")
+        material_id = None
+        if raw_material_id not in (None, ""):
+            try:
+                material_id = int(raw_material_id)
+            except (TypeError, ValueError):
+                return jsonify({"error": "id_material no es válido."}), 400
+        try:
+            rpta_correcta = parse_optional_bool(request.form.get("rpta_correcta"))
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+
+        missing = [
+            label
+            for label, value in (
+                ("fk_alumno", fk_alumno),
+                ("pregunta", pregunta),
+                ("respuesta", respuesta),
+                ("apreciacion_robot", apreciacion_robot),
+            )
+            if not value
+        ]
+        if not audio_rpta or not audio_rpta.filename:
+            missing.append("audio_rpta")
+        if rpta_correcta is None:
+            missing.append("rpta_correcta")
+        if missing:
+            return jsonify({"error": f"Faltan campos obligatorios: {', '.join(missing)}."}), 400
+        if len(fk_alumno) > 50:
+            return jsonify({"error": "fk_alumno excede el límite permitido."}), 413
+        if (
+            len(pregunta) > MAX_TRANSCRIPT_CHARS
+            or len(respuesta) > MAX_TRANSCRIPT_CHARS
+            or len(apreciacion_robot) > MAX_TRANSCRIPT_CHARS
+        ):
+            return jsonify({
+                "error": "La pregunta, la respuesta o la apreciación exceden el límite permitido."
+            }), 413
+
+        material = None
+        if material_id is not None:
+            material = db.session.get(Material, material_id)
+            if not material:
+                return jsonify({"error": "Material no encontrado."}), 404
+        if material is not None:
+            interaction_periodo_id = material.id_periodo
+        else:
+            interaction_periodo = periodo_for_date(utc_now().date())
+            interaction_periodo_id = interaction_periodo.id if interaction_periodo else None
+
+        interaccion_dir_name = uuid.uuid4().hex
+        interaccion_dir = os.path.join(app.config["UPLOADS_ROOT"], interaccion_dir_name)
+        os.makedirs(interaccion_dir, exist_ok=True)
+        audio_path = os.path.join(interaccion_dir, "audio_rpta.wav")
+        audio_rpta.save(audio_path)
+        try:
+            _wav_duration_seconds(audio_path)
+        except (EOFError, OSError, wave.Error):
+            shutil.rmtree(interaccion_dir, ignore_errors=True)
+            return jsonify({"error": "El audio de la respuesta no es un WAV válido."}), 400
+
+        interaccion = Interaccion(
+            id_material=material.id if material else None,
+            fk_alumno=fk_alumno,
+            pregunta=pregunta,
+            respuesta=respuesta,
+            path_audio_rpta=f"uploads/{interaccion_dir_name}/audio_rpta.wav",
+            apreciacion_robot=apreciacion_robot,
+            rpta_correcta=rpta_correcta,
+            id_periodo=interaction_periodo_id,
+        )
+        db.session.add(interaccion)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            shutil.rmtree(interaccion_dir, ignore_errors=True)
+            app.logger.exception("No se pudo registrar la interacción")
+            return jsonify({"error": "No se pudo registrar la interacción."}), 500
+        return jsonify(serialize_interaccion(interaccion)), 201
+
+    # Robot-side endpoint: descarga el audio de la respuesta que MAXCIM
+    # almacenó al registrar la interacción (ver registrar_interaccion). Exige
+    # identificar a la docente y que el material de la interacción le
+    # pertenezca (hallazgo A-03).
+    @app.route("/api/interacciones/<int:interaccion_id>/audio", methods=["GET"])
+    def download_interaccion_audio(interaccion_id):
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        teacher_id, docente = robot_teacher_query()
+        if not teacher_id and not docente:
+            return jsonify({
+                "error": "Falta identificar a la docente (docente o teacher_id)."
+            }), 400
+        interaccion = db.session.get(Interaccion, interaccion_id)
+        if not interaccion:
+            return jsonify({"error": "Interacción no encontrada."}), 404
+        material = (
+            db.session.get(Material, interaccion.id_material)
+            if interaccion.id_material
+            else None
+        )
+        if material is None or not robot_material_belongs(material, teacher_id, docente):
+            # Conversación libre (sin material) o material de otra docente.
+            return jsonify({"error": "La interacción no pertenece a esa docente."}), 403
+        try:
+            abs_path = uploads_abspath(interaccion.path_audio_rpta)
+        except ValueError:
+            return jsonify({"error": "No se encontró el audio de la respuesta."}), 404
+        if not os.path.isfile(abs_path):
+            return jsonify({"error": "No se encontró el audio de la respuesta."}), 404
+        return send_file(
+            abs_path,
+            mimetype="audio/wav",
+            as_attachment=True,
+            download_name="respuesta.wav",
+        )
+
+    # Robot-side endpoint: consulta el historial (por material y/o alumno).
+    @app.route("/api/interacciones", methods=["GET"])
+    def list_interacciones():
+        if not webhook_authorized():
+            return jsonify({"error": "Integración no autorizada."}), 401
+        teacher_id, docente = robot_teacher_query()
+        if not teacher_id and not docente:
+            return jsonify({
+                "error": "Falta identificar a la docente (docente o teacher_id)."
+            }), 400
+        material_id = request.args.get("id_material")
+        fk_alumno = (request.args.get("fk_alumno") or "").strip()
+        # Exigir al menos un filtro además de la docente: el robot siempre
+        # consulta por un material o por un alumno concreto.
+        if not material_id and not fk_alumno:
+            return jsonify({
+                "error": "Indica al menos id_material o fk_alumno."
+            }), 400
+        # Solo interacciones de materiales de esta docente (hallazgo A-03). Las
+        # conversaciones libres (id_material NULL) no tienen dueña y quedan
+        # fuera de la API del robot hasta el hallazgo A-05.
+        query = (
+            Interaccion.query
+            .join(Material, Interaccion.id_material == Material.id)
+            .filter(robot_owner_filter(teacher_id, docente))
+        )
+        if material_id:
+            try:
+                query = query.filter(Interaccion.id_material == int(material_id))
+            except ValueError:
+                return jsonify({"error": "id_material no es válido."}), 400
+        if fk_alumno:
+            query = query.filter(Interaccion.fk_alumno == fk_alumno)
+        interacciones = query.order_by(Interaccion.fecha_hora.desc()).limit(200).all()
+        return jsonify([serialize_interaccion(item) for item in interacciones])
+
+    return app
+
+
+app = create_app()
+
+if __name__ == "__main__":
+    app.run(
+        host=os.environ.get("FLASK_HOST", "127.0.0.1"),
+        port=int(os.environ.get("FLASK_PORT", "5000")),
+        debug=env_bool("FLASK_DEBUG", False),
+    )

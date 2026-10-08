@@ -11,7 +11,7 @@ Fuentes autorizadas por Gabriel para consolidar MAXCIM:
 
 `source-manifest.json` enumera ruta original y SHA de blob de cada archivo importado. El SHA identifica la fuente; se normalizaron finales de línea a LF y algunos destinos recibieron cambios V5, por lo que no se afirma que su contenido siga idéntico. Las copias activas de audio/visión/memoria/conversación y RPLIDAR provienen de los archivos equivalentes en legacy.
 
-Se excluyeron historiales duplicados, copias de respaldo, entornos, archivos de secretos, modelos/pesos, bases personales y datos de grabación. No se recuperó contenido de las máquinas físicas ni se usaron credenciales antiguas. Los iconos PNG educativos no estaban disponibles mediante la importación de texto.
+Se excluyeron historiales duplicados, copias de respaldo, entornos, archivos de secretos, modelos/pesos, bases personales y datos de grabación. No se recuperó contenido de las máquinas físicas ni se usaron credenciales antiguas. El archivo educativo principal se recuperó por rangos para evitar límites de tamaño; los iconos PNG originales se recuperaron como base64.
 
 Los archivos de terceros retienen sus avisos, entre ellos RPLIDAR/SLAMTEC. Algunos paquetes originales declaran MIT, otros tienen `TODO` o Proprietary; no se asigna una licencia global que conceda derechos sobre todos los componentes. Verificar titularidad/permisos antes de redistribuir fuera del alcance del proyecto. La carpeta legacy preserva atribuciones e implementación original; no se arranca automáticamente.
 

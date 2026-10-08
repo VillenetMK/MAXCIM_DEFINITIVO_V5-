@@ -3985,5 +3985,19 @@
     "sha": "ee7e7cfda081193d0b3b5beb301e7c43d6e0d6f9",
     "mode": "100644",
     "derived_from": "robot/legacy/ros2_ws/src/rplidar_ros/src/rplidar_node.cpp"
+  },
+  {
+    "repo": "arodasr-cima/maxcim_app",
+    "source": "static/icons/maxcim-192.png",
+    "path": "apps/education/static/icons/maxcim-192.png",
+    "sha": "73d460b9e713dd2ecde21f4aa91374c89b7ccd25",
+    "mode": "100644"
+  },
+  {
+    "repo": "arodasr-cima/maxcim_app",
+    "source": "static/icons/maxcim-512.png",
+    "path": "apps/education/static/icons/maxcim-512.png",
+    "sha": "7315f7a1f10fba727e809efefd0465facbc01e88",
+    "mode": "100644"
   }
 ]

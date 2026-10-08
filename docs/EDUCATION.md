@@ -16,7 +16,7 @@ python -m pip install -r requirements.txt
 python -m flask --app app:create_app run --host 127.0.0.1 --port 8081
 ```
 
-Antes de arrancar con datos reales configurar `DEMO_MODE=false`, `DATABASE_URL` (o MYSQL_HOST/PORT/USER/PASSWORD/DATABASE), `SECRET_KEY` y `SESSION_TOKEN_ENCRYPTION_KEY` de tipo Fernet. La API institucional requiere HTTPS y verificación TLS. Configurar las rutas `INSTITUTIONAL_API_*` según el contrato real; no se han inventado endpoints ni claves. `GOOGLE_API_KEY` activa generación y `FISH_API_KEY` narración; sin ellas no existe ese servicio real.
+Antes de arrancar con datos reales configurar `DEMO_MODE=false`, `DATABASE_URL` (o MYSQL_HOST/PORT/USER/PASSWORD/DATABASE), `MAXCIM_WEBHOOK_SECRET`, `SECRET_KEY` y `SESSION_TOKEN_ENCRYPTION_KEY` de tipo Fernet. La API institucional requiere HTTPS y verificación TLS. Configurar las rutas `INSTITUTIONAL_API_*` según el contrato real; no se han inventado endpoints ni claves. `GOOGLE_API_KEY` activa generación y `FISH_API_KEY` narración; sin ellas no existe ese servicio real.
 
 Para un ensayo de interfaz sin institución usar **explícitamente** `DEMO_MODE=true`; sus identidades, materiales y audio de relleno no son evidencia de resultados reales del proyecto. El código original deja demo desactivado por defecto. Para producción usar Gunicorn y proxy TLS, no el servidor de desarrollo Flask.
 
@@ -25,6 +25,6 @@ python -m pip install pytest
 python -m pytest tests
 ```
 
-Estas pruebas no se ejecutaron en el entorno actual porque no se pudieron instalar Flask/SQLAlchemy. Solo se comprobó la sintaxis Python. En la importación faltaron dos iconos PNG binarios; se utiliza el SVG original en manifest y caché para evitar recursos inexistentes. El icono Apple PNG queda pendiente.
+Las pruebas educativas se ejecutan en un trabajo separado de GitHub Actions con SQLite aislada y credenciales temporales. No implican haber probado la institución real. El archivo principal se recuperó por rangos y se verificó contra su SHA original, evitando el recorte de la importación inicial. Los iconos PNG originales también están incluidos.
 
 La siguiente integración de contenido debe definir el contrato de material y los eventos de reproducción/interacción por ROS 2 antes de escribir en tablas institucionales. No existe ningún envío automático de resultados escolares desde la consola nueva.
