@@ -227,38 +227,47 @@ async def events(request):
 
 
 async def life(app):
-    async def run():
-        last = 0.0
+    async def close_socket(ws, **kwargs):
+        # Un peer que no completa el cierre no puede retener el servicio.
+        with contextlib.suppress(TimeoutError, ConnectionError, RuntimeError):
+            await asyncio.wait_for(ws.close(**kwargs), .1)
+
+    async def publish(client):
+        ws, token, owner = client
+        actor = app[STORE].db.execute("SELECT 1 FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires>? AND u.active=1", (token, time.time())).fetchone()
+        if not actor:
+            app[CLIENTS].discard(client)
+            await close_socket(ws, code=1008, message=b"Session expired")
+            return
+        payload = public_state(app)
+        payload["owns_control"] = app[BRIDGE].state().get("owner") == owner
+        try:
+            await asyncio.wait_for(ws.send_json({"type": "state", "data": payload}), .1)
+        except (TimeoutError, ConnectionError, RuntimeError):
+            app[CLIENTS].discard(client)
+            await close_socket(ws)
+
+    async def broadcast():
+        while True:
+            await asyncio.gather(*(publish(client) for client in tuple(app[CLIENTS])))
+            await asyncio.sleep(.2)
+
+    async def watchdog():
         while True:
             app[BRIDGE].tick()
-            now = time.monotonic()
-            if now-last >= .2:
-                last = now
-                for ws, token, owner in tuple(app[CLIENTS]):
-                    actor = app[STORE].db.execute("SELECT 1 FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=? AND s.expires>? AND u.active=1", (token, time.time())).fetchone()
-                    if not actor:
-                        await ws.close(code=1008, message=b"Session expired")
-                        app[CLIENTS].discard((ws, token, owner))
-                        continue
-                    payload = public_state(app)
-                    payload["owns_control"] = app[BRIDGE].state().get("owner") == owner
-                    try:
-                        await asyncio.wait_for(ws.send_json({"type": "state", "data": payload}), .1)
-                    except (TimeoutError, ConnectionError, RuntimeError):
-                        app[CLIENTS].discard((ws, token, owner))
-                        await ws.close()
             await asyncio.sleep(.05)
-    task = asyncio.create_task(run())
+    workers = [asyncio.create_task(watchdog()), asyncio.create_task(broadcast())]
     try:
         yield
     finally:
-        task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await task
-        for ws, _, _ in tuple(app[CLIENTS]):
-            await ws.close(code=1001, message=b"Server shutdown")
+        for task in workers:
+            task.cancel()
+        await asyncio.gather(*workers, return_exceptions=True)
         with contextlib.suppress(Exception):
             await app[BRIDGE].execute("server_shutdown", "estop", {})
+        await asyncio.gather(*(close_socket(ws, code=1001, message=b"Server shutdown")
+                               for ws, _, _ in tuple(app[CLIENTS])))
+        app[CLIENTS].clear()
         app[BRIDGE].close()
         app[STORE].close()
 

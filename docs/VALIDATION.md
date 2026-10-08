@@ -4,7 +4,7 @@ Entrega preparada el 8 de octubre de 2026. Las fechas del código importado no p
 
 | Comprobación | Resultado |
 |---|---|
-| API/control/catálogo/callbacks ROS con dobles | 38 pruebas Python aprobadas |
+| API/control/catálogo/callbacks ROS con dobles | 39 pruebas Python aprobadas |
 | Protocolo, cinemática, seguridad y odometría de la base recuperada | 85 pruebas Python aprobadas |
 | Firmware Nano, núcleo nativo C++ | Aprobado con `-Wall -Wextra -Werror -pedantic` |
 | Sketch ESP32 V5 con dobles Serial/PCA9685 | Aprobado: parser, inicio deshabilitado, INIT, STOP, ID de grupo, rangos y watchdog |
@@ -14,14 +14,22 @@ Entrega preparada el 8 de octubre de 2026. Las fechas del código importado no p
 | Recorrido Chromium | Aprobado en GitHub Actions: control, dos pestañas, tareas/notas, móvil y logout |
 | Núcleo ROS Jazzy y mensajes generados | Aprobado en GitHub Actions |
 | DDS: puente Nano/odometría con PTY y gateway V5 con actuadores simulados | Aprobado en GitHub Actions; no prueba motores reales |
-| Aplicación educativa Flask/SQLite aislada | Incorporada a CI; consultar ejecución correspondiente |
+| Aplicación educativa Flask/SQLite aislada | Aprobada en GitHub Actions, ejecución 37819342478 |
 | APIs institucionales/Gemini/Fish Audio | Pendiente: servicios reales no conectados |
 | Compilación Arduino/ESP32 y flasheo | Pendiente; el banco nativo no utiliza el SDK real |
 | Robot, LiDAR, cámara, audio y parada eléctrica | Pendiente: sin conexión física al robot |
 
-Las 123 pruebas Python comprueban exclusión de operadores/pestañas, expiración de mando, orden atrasada después de frenar, enclavamiento, roles, CSRF, logout sin gateway, revocación de WebSocket, conflicto de tareas y catálogo real. También prueban que una respuesta vieja de ESP32 no confirme un grupo nuevo y que la voz no adquiera ni eluda el control del operador.
+Las 124 pruebas Python comprueban exclusión de operadores/pestañas, expiración de mando, orden atrasada después de frenar, enclavamiento, roles, CSRF, logout sin gateway, revocación de WebSocket, conflicto de tareas y catálogo real. También prueban que una respuesta vieja de ESP32 no confirme un grupo nuevo y que la voz no adquiera ni eluda el control del operador.
 
 La ejecución [37817829022](https://github.com/VillenetMK/MAXCIM_DEFINITIVO_V5-/actions/runs/37817829022), revisión `1e6d7a400d38bd620c038f6b821908ac24ddd549`, aprobó los trabajos `core-and-browser` y `ros-build`. La compilación inicial cubrió interfaces, gateway, base y odometría. La ejecución [37818315019](https://github.com/VillenetMK/MAXCIM_DEFINITIVO_V5-/actions/runs/37818315019), revisión `b4b6db452f9d6a911f9478e2ef980aca1cd47666`, también aprobó la compilación de todo el workspace, incluido SDK LiDAR y paquetes Jetson. Compilar Python no equivale a cargar modelos, SDK de cámara o servicios reales.
+
+La ejecución [37819342478](https://github.com/VillenetMK/MAXCIM_DEFINITIVO_V5-/actions/runs/37819342478), revisión `ff25672dafa3878b11d613b197608999c752143d`, aprobó los tres trabajos: núcleo/navegador, workspace ROS y aplicación educativa.
+
+## Continuación: conexiones de estado lentas
+
+Se reprodujo mediante un doble de WebSocket un cierre bloqueado que impedía al simulador vencer la orden de avance: tras 450 ms la velocidad seguía en 0,1 m/s. La regresión ahora comprueba la parada y la recepción de estado en otro cliente. El watchdog se ejecuta en una tarea separada; el envío a los clientes es concurrente y cada envío/cierre tiene un límite de 100 ms. Al apagar la API se solicita la parada antes de cerrar los WebSockets.
+
+Esta separación evita la espera de red observada; no convierte el event loop de Python en un sistema de tiempo real. El gateway ROS y los watchdogs de firmware conservan su responsabilidad sobre el hardware. La prueba no mueve el robot físico.
 
 ## Repetir
 

@@ -4,7 +4,7 @@ Centro de operación y espacio de equipo para MAXCIM, **Proyecto de Innovación 
 
 Consola web con acceso por rol, control exclusivo por operador/pestaña, estado por WebSocket, parada enclavada, tareas y bitácora persistentes. El robot utiliza un gateway ROS 2 que aplica límites y detiene órdenes vencidas aunque la API desaparezca. La cámara JPEG y el audio se declaran presentes solo al recibir datos recientes.
 
-**Estado de esta entrega:** consola y simulación verificadas por 123 pruebas Python y dos bancos C++. Núcleo ROS 2 Jazzy compilado y ensayos DDS con actuadores/Nano emulados aprobados en GitHub Actions, junto con el recorrido real del panel en Chromium. Flasheo, servicios externos y pruebas físicas pendientes. Los motores y brazos requieren calibración explícita. Ningún sensor ni resultado experimental se presenta como real por estar simulado. Ver [validación](docs/VALIDATION.md).
+**Estado de esta entrega:** consola y simulación verificadas por 124 pruebas Python y dos bancos C++. Núcleo ROS 2 Jazzy compilado y ensayos DDS con actuadores/Nano emulados aprobados en GitHub Actions, junto con el recorrido real del panel en Chromium. Flasheo, servicios externos y pruebas físicas pendientes. Los motores y brazos requieren calibración explícita. Ningún sensor ni resultado experimental se presenta como real por estar simulado. Ver [validación](docs/VALIDATION.md).
 
 ## Arrancar la consola en simulación
 

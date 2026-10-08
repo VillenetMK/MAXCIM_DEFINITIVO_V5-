@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock
 from aiohttp.test_utils import TestClient, TestServer
-from maxcim_api.server import create_app, STORE, BRIDGE
+from maxcim_api.server import create_app, STORE, BRIDGE, CLIENTS
 
 class APITests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
@@ -74,6 +74,32 @@ class APITests(unittest.IsolatedAsyncioTestCase):
         await self.command("drive",{"seq":1,"linear":.1,"angular":0})
         await asyncio.sleep(.45)
         self.assertEqual(self.app[BRIDGE].state()["linear"],0)
+
+    async def test_stalled_websocket_close_does_not_delay_watchdog(self):
+        await self.login();await self.command("acquire")
+        await self.command("drive",{"seq":1,"linear":.1,"angular":0})
+        cookie=self.client.session.cookie_jar.filter_cookies(self.client.make_url("/"))["maxcim_session"].value
+        token=self.app[STORE].session(cookie)["token"]
+        closing, unblock = asyncio.Event(), asyncio.Event()
+        class StalledSocket:
+            async def send_json(self, packet):
+                raise ConnectionError("Disconnected peer")
+            async def close(self, **kwargs):
+                closing.set()
+                await unblock.wait()
+        peer=(StalledSocket(),token,token+":one-panel-123456789")
+        self.app[CLIENTS].add(peer)
+        try:
+            await asyncio.wait_for(closing.wait(),1)
+            await asyncio.sleep(.45)
+            self.assertEqual(self.app[BRIDGE].state()["linear"],0)
+            ws=await self.client.ws_connect("/api/events?client=one-panel-123456789")
+            packet=await ws.receive_json(timeout=1)
+            self.assertEqual(packet["data"]["linear"],0)
+            await ws.close()
+        finally:
+            unblock.set()
+            self.app[CLIENTS].discard(peer)
 
     async def test_task_optimistic_lock_and_notes_persist(self):
         await self.login()
