@@ -59,13 +59,13 @@ jobs:
       - name: Install build tools
         run: |
           apt-get update
-          apt-get install -y python3-colcon-common-extensions python3-pip ros-jazzy-sensor-msgs ros-jazzy-std-srvs
+          apt-get install -y python3-colcon-common-extensions python3-pip ros-jazzy-sensor-msgs ros-jazzy-std-srvs ros-jazzy-cv-bridge ros-jazzy-ament-cmake-auto ros-jazzy-ament-cmake-ros
           python3 -m pip install --break-system-packages -e '.[hardware]'
       - name: Build generated interfaces and control packages
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon --log-base robot/ros2/log build --base-paths robot/ros2/src --build-base robot/ros2/build --install-base robot/ros2/install --packages-select maxcim_interfaces maxcim_control maxcim_base maxcim_odometry --symlink-install
+          colcon --log-base robot/ros2/log build --base-paths robot/ros2/src --build-base robot/ros2/build --install-base robot/ros2/install --symlink-install
           source robot/ros2/install/setup.bash
           python3 robot/base-reference/tests/ros_smoke.py
           python3 tests/ros_gateway_smoke.py

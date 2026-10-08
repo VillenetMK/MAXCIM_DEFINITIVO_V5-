@@ -11,13 +11,16 @@ Entrega preparada el 8 de octubre de 2026. Las fechas del código importado no p
 | Sintaxis de API, paquetes y educación | compileall aprobado |
 | JavaScript del panel | node --check aprobado |
 | Instalación editable del paquete Python | Aprobada sin dependencias adicionales |
-| Recorrido Chromium | Script preparado; no ejecutado localmente por falta de binario de navegador |
-| Compilación ROS, mensajes generados y DDS | Pendiente: ROS/colcon no disponibles en este entorno |
+| Recorrido Chromium | Aprobado en GitHub Actions: control, dos pestañas, tareas/notas, móvil y logout |
+| Núcleo ROS Jazzy y mensajes generados | Aprobado en GitHub Actions |
+| DDS: puente Nano/odometría con PTY y gateway V5 con actuadores simulados | Aprobado en GitHub Actions; no prueba motores reales |
 | Aplicación educativa Flask, DB y APIs | Pendiente: dependencias no disponibles y servicios no conectados |
 | Compilación Arduino/ESP32 y flasheo | Pendiente; el banco nativo no utiliza el SDK real |
 | Robot, LiDAR, cámara, audio y parada eléctrica | Pendiente: sin conexión física al robot |
 
 Las 123 pruebas Python comprueban exclusión de operadores/pestañas, expiración de mando, orden atrasada después de frenar, enclavamiento, roles, CSRF, logout sin gateway, revocación de WebSocket, conflicto de tareas y catálogo real. También prueban que una respuesta vieja de ESP32 no confirme un grupo nuevo y que la voz no adquiera ni eluda el control del operador.
+
+La ejecución [37817829022](https://github.com/VillenetMK/MAXCIM_DEFINITIVO_V5-/actions/runs/37817829022), revisión `1e6d7a400d38bd620c038f6b821908ac24ddd549`, aprobó los trabajos `core-and-browser` y `ros-build`. La compilación inicial cubrió interfaces, gateway, base y odometría. La compilación de todos los paquetes, incluido el SDK LiDAR y módulos Jetson, se incorpora al workflow; comprobar su resultado correspondiente.
 
 ## Repetir
 
