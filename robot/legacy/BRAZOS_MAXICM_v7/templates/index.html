@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brazos MaxiCM | Terminal de Control</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>🤖 BRAZOS MAXICM - Centro de Mando</h1>
+
+        <div id="info-global" class="info-box">
+            Última acción: Esperando comandos...
+        </div>
+
+        <div id="serial-info" class="serial-box">
+            Estado serial: cargando...
+        </div>
+
+        <div class="home-global">
+            <button class="btn-purple btn-large" onclick="irAHomeGlobal()">
+                🏠 ENVIAR TODO A HOME
+            </button>
+        </div>
+
+        <!-- CONTROLES DE BRAZOS: NO QUITAR -->
+        <div class="grid">
+            <div class="card">
+                <h2>👈 Brazo 1 Izquierdo</h2>
+                <p class="subtitle">
+                    CH0 = Hombro | CH1 = Codo Rotación | CH2 = Codo Vertical
+                </p>
+                <div id="brazo1-container"></div>
+            </div>
+
+            <div class="card">
+                <h2>👉 Brazo 2 Derecho</h2>
+                <p class="subtitle">
+                    CH4 = Hombro | CH5 = Codo Rotación | CH6 = Codo Vertical
+                </p>
+                <div id="brazo2-container"></div>
+            </div>
+        </div>
+
+        <!-- PASOS INDIVIDUALES -->
+        <div class="card">
+            <h2>💾 Biblioteca de Pasos Individuales</h2>
+
+            <p class="subtitle">
+                Crea o modifica movimientos individuales de un solo servo.
+            </p>
+
+            <div class="creator-row">
+                <input
+                    type="text"
+                    id="step-name"
+                    placeholder="Nombre del paso. Ej: B2-SM1"
+                    class="input-grow"
+                >
+
+                <select id="step-channel" onchange="actualizarAnguloSugerido()">
+                    <option value="0">Ch 0 - Brazo 1 Hombro</option>
+                    <option value="1">Ch 1 - Brazo 1 Codo Rot</option>
+                    <option value="2">Ch 2 - Brazo 1 Codo Vert</option>
+                    <option value="4">Ch 4 - Brazo 2 Hombro</option>
+                    <option value="5">Ch 5 - Brazo 2 Codo Rot</option>
+                    <option value="6">Ch 6 - Brazo 2 Codo Vert</option>
+                </select>
+
+                <div class="mini-field">
+                    <label>Ángulo:</label>
+                    <input type="number" id="step-angle" class="input-small">°
+                </div>
+
+                <div class="mini-field">
+                    <label>Velocidad:</label>
+                    <input type="number" id="step-interval" value="5" class="input-small"> ms
+                </div>
+
+                <div class="mini-field">
+                    <label>Retardo:</label>
+                    <input type="number" id="step-delay" value="0.5" step="0.1" class="input-small"> s
+                </div>
+
+                <button class="btn-green" onclick="crearPaso()">
+                    Crear / Modificar Paso
+                </button>
+            </div>
+
+            <table class="pose-table">
+                <thead>
+                    <tr>
+                        <th>Identificador</th>
+                        <th>Motor / Canal</th>
+                        <th>Ángulo</th>
+                        <th>Velocidad</th>
+                        <th>Retardo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="steps-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- CONSTRUCTOR DE SECUENCIAS -->
+        <div class="card">
+            <h2>⛓️ Constructor de Rutas e Historial Secuencial</h2>
+
+            <p class="subtitle">
+                Arma rutas con pasos individuales, movimientos creados o acciones rápidas.
+            </p>
+
+            <div class="seq-builder">
+                <div class="seq-actions">
+                    <button class="btn-dark" onclick="agregarACola('[ IR A HOME COMIENZO ]')">
+                        + Añadir Reset a Home
+                    </button>
+                </div>
+
+                <div id="sequence-queue" class="sequence-queue">
+                    [ Secuencia Vacía ]
+                </div>
+
+                <button class="btn-green btn-large" onclick="ejecutarSecuencia()">
+                    ▶️ LANZAR SECUENCIA
+                </button>
+
+                <button class="btn-red" onclick="limpiarSecuencia()">
+                    Limpiar Orden
+                </button>
+            </div>
+        </div>
+
+        <!-- ACCIONES RÁPIDAS -->
+        <div class="card">
+            <h2>⚡ Acciones Rápidas Editables</h2>
+
+            <p class="subtitle">
+                Crea botones rápidos usando la ruta actual del constructor.
+            </p>
+
+            <div class="creator-row">
+                <input
+                    type="text"
+                    id="quick-action-name"
+                    placeholder="Nombre de acción rápida. Ej: INICIAR SALUDO"
+                    class="input-grow"
+                >
+
+                <select id="quick-action-mode">
+                    <option value="sequence">Secuencia</option>
+                    <option value="parallel">Paralelo</option>
+                </select>
+
+                <div class="mini-field">
+                    <label>Wait:</label>
+                    <input
+                        type="number"
+                        id="quick-action-wait"
+                        value="0"
+                        step="0.1"
+                        class="input-small"
+                    > s
+                </div>
+
+                <button class="btn-green" onclick="guardarAccionRapida('replace')">
+                    Crear / Editar
+                </button>
+
+                <button class="btn-blue" onclick="guardarAccionRapida('append')">
+                    Agregar a existente
+                </button>
+
+                <button class="btn-dark" onclick="guardarAccionRapida('keep')">
+                    Mantener si existe
+                </button>
+            </div>
+
+            <table class="pose-table">
+                <thead>
+                    <tr>
+                        <th>Acción rápida</th>
+                        <th>Secuencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="quick-actions-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- MOVIMIENTOS CREADOS -->
+        <div class="card">
+            <h2>💾 Movimientos Creados</h2>
+
+            <p class="subtitle">
+                Guarda rutas completas como movimientos reutilizables.
+            </p>
+
+            <div class="creator-row">
+                <input
+                    type="text"
+                    id="movement-name"
+                    placeholder="Nombre del movimiento. Ej: SALUDO COMPLETO"
+                    class="input-grow"
+                >
+
+                <select id="movement-mode">
+                    <option value="sequence">Secuencia</option>
+                    <option value="parallel">Paralelo</option>
+                </select>
+
+                <div class="mini-field">
+                    <label>Wait:</label>
+                    <input
+                        type="number"
+                        id="movement-wait"
+                        value="0"
+                        step="0.1"
+                        class="input-small"
+                    > s
+                </div>
+
+                <button class="btn-green" onclick="guardarMovimiento('replace')">
+                    Crear / Editar
+                </button>
+
+                <button class="btn-blue" onclick="guardarMovimiento('append')">
+                    Agregar a existente
+                </button>
+
+                <button class="btn-dark" onclick="guardarMovimiento('keep')">
+                    Mantener si existe
+                </button>
+            </div>
+
+            <table class="pose-table">
+                <thead>
+                    <tr>
+                        <th>Movimiento</th>
+                        <th>Secuencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="movements-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

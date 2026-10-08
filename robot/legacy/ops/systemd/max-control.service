@@ -1,0 +1,17 @@
+[Unit]
+Description=MAX web control on the local network
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/MAX
+ExecStart=/bin/bash %h/MAX/start_control.sh --lan
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=5
+UMask=0077
+Environment=ROS_DOMAIN_ID=0
+Environment=ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+
+[Install]
+WantedBy=default.target

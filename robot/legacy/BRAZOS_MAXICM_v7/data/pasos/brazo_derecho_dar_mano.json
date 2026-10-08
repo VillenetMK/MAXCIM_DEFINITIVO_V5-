@@ -1,0 +1,14 @@
+{
+    "B2-DARMANO1": {
+        "channel": 4,
+        "angle": 190,
+        "interval": 5,
+        "delay": 0.5
+    },
+    "B2-DARMANO2": {
+        "channel": 6,
+        "angle": 50,
+        "interval": 5,
+        "delay": 0.5
+    }
+}

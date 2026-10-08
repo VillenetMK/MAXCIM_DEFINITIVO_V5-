@@ -1,0 +1,17 @@
+[Unit]
+Description=MAX Studio unified local control
+Requires=max-control.service
+Wants=max-arms-local.service
+After=max-control.service max-arms-local.service network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/MAX
+ExecStart=/bin/bash %h/MAX/start_studio.sh --lan
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=6
+UMask=0077
+
+[Install]
+WantedBy=default.target

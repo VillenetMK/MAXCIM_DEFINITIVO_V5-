@@ -1,0 +1,20 @@
+{
+    "B2-SM1": {
+        "channel": 4,
+        "angle": 270,
+        "interval": 3,
+        "delay": 1.0
+    },
+    "B2-SM2": {
+        "channel": 5,
+        "angle": 0,
+        "interval": 1,
+        "delay": 0.6
+    },
+    "B2-SM3": {
+        "channel": 6,
+        "angle": 45,
+        "interval": 8,
+        "delay": 0.1
+    }
+}

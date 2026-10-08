@@ -1,0 +1,20 @@
+{
+  "name": "MAXCIM Docentes",
+  "short_name": "MAXCIM",
+  "description": "Preparación, seguimiento y revisión docente de interacciones orales con MAXCIM.",
+  "lang": "es",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f0f2f6",
+  "theme_color": "#132a5e",
+  "icons": [
+    {
+      "src": "/static/icons/maxcim.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+wheel_odometry:
+  ros__parameters:
+    # Values must be measured on the real assembled robot before enabling.
+    calibration_confirmed: false
+    left_wheel_radius_m: 0.0
+    right_wheel_radius_m: 0.0
+    wheel_separation_m: 0.0
+    # Effective FALLING edges per FULL WHEEL revolution, including gearbox.
+    left_pulses_per_revolution: 0.0
+    right_pulses_per_revolution: 0.0
+    max_wheel_speed_mps: 1.0
+    max_sample_gap_s: 0.25
+    max_feedback_age_s: 0.25
+    odom_frame: odom
+    base_frame: base_link
+    # Disable when a fusion node owns odom -> base_link; remap /odom too.
+    publish_tf: true
+    # ROS ordering: x, y, z, roll, pitch, yaw. Conservative starting values,
+    # NOT uncertainty measured from a calibration experiment.
+    pose_covariance_diagonal: [0.02, 0.02, 1000000.0, 1000000.0, 1000000.0, 0.05]
+    twist_covariance_diagonal: [0.05, 1000000.0, 1000000.0, 1000000.0, 1000000.0, 0.1]

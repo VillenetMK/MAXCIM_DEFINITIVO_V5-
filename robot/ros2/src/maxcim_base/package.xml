@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>maxcim_base</name><version>0.1.0</version>
+  <description>Control físico diferencial hacia delante mediante Nano y FG.</description>
+  <maintainer email="147531932+VillenetMK@users.noreply.github.com">VillenetMK</maintainer>
+  <license>Proprietary</license>
+  <buildtool_depend>ament_python</buildtool_depend>
+  <exec_depend>rclpy</exec_depend><exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend><exec_depend>std_srvs</exec_depend>
+  <exec_depend>maxcim_interfaces</exec_depend><exec_depend>maxcim_odometry</exec_depend>
+  <exec_depend>python3-serial</exec_depend><exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend><exec_depend>ament_index_python</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

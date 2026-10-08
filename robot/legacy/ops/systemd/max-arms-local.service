@@ -1,0 +1,18 @@
+[Unit]
+Description=MAX V8 arms loopback adapter
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/MAX/BRAZOS_MAXICM_v8
+Environment=ROS_DOMAIN_ID=0
+Environment=ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+Environment=MAX_ARMS_PORT=/dev/serial/by-path/platform-xhci-hcd.1-usb-0:1:1.0-port0
+ExecStart=/bin/bash -c 'source /opt/ros/jazzy/setup.bash && exec %h/.local/share/max-control/venv/bin/python %h/MAX/studio/arms_service.py'
+Restart=no
+KillSignal=SIGINT
+TimeoutStopSec=5
+UMask=0077
+
+[Install]
+WantedBy=default.target

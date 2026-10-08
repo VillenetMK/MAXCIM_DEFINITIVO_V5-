@@ -1,0 +1,37 @@
+{
+    "saludar": {
+        "movimiento": "SALUDOMILITAR",
+        "esperar_segundos": 2.0,
+        "volver_a_home": "HOME-BRAZO-DERECHO"
+    },
+    "levantar_manos": {
+        "movimiento": "EXTENDER-DOS-BRAZOS",
+        "esperar_segundos": 2.0,
+        "volver_a_home": "HOME-DOS-BRAZOS"
+    },
+    "dar_mano": {
+        "movimiento": "DARMANODERECHA",
+        "esperar_segundos": 2.0,
+        "volver_a_home": "HOME-BRAZO-DERECHO"
+    },
+    "bailar": {
+        "movimiento": "BAILE",
+        "esperar_segundos": 0.0,
+        "volver_a_home": ""
+    },
+    "brazo_derecho_arriba": {
+        "movimiento": "BRAZO_DERECHO_ARRIBA",
+        "esperar_segundos": 0.0,
+        "volver_a_home": ""
+    },
+    "brazo_izquierdo_arriba": {
+        "movimiento": "BRAZO_IZQUIERDO_ARRIBA",
+        "esperar_segundos": 0.0,
+        "volver_a_home": ""
+    },
+    "dar_mano_izquierda": {
+        "movimiento": "DARMANOIZQUIERDA",
+        "esperar_segundos": 2.0,
+        "volver_a_home": "HOME-BRAZO-IZQUIERDO"
+    }
+}

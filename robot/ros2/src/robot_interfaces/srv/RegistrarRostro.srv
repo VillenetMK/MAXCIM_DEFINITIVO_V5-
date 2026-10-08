@@ -1,0 +1,9 @@
+# Registra el rostro de la persona desconocida en escena con este nombre.
+string nombre
+---
+bool ok
+int32 user_id               # id en registered_user (0 si falló)
+string nombre               # nombre normalizado con el que se registró
+string error                # vacío si ok; si no, motivo legible para el agente
+string ya_registrado_como   # si la cara ya pertenece a alguien de la BD, su nombre
+float32 similitud           # similitud con ya_registrado_como (0 si no aplica)

@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.9.2
+    container_name: mcia_qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - mcia_net
+
+  n8n:
+    image: n8nio/n8n:2.28.5
+    container_name: mcia_n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in .env}
+      - N8N_SECURE_COOKIE=false
+    networks:
+      - mcia_net
+
+networks:
+  mcia_net:
+    driver: bridge
+
+volumes:
+  qdrant_storage:
+  n8n_data:

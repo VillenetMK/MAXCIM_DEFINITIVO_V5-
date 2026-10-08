@@ -1,0 +1,118 @@
+{% extends "app_shell.html" %}
+
+{% block title %}Avance de {{ classroom.name }} · MAXCIM{% endblock %}
+
+{% block content %}
+<div class="teacher-view">
+  <header class="page-heading teacher-heading">
+    <div>
+      <p class="page-heading__eyebrow"><a href="{{ url_for('dashboard') }}">Mis aulas</a> <span aria-hidden="true">/</span> Avance del aula</p>
+      <h1 class="sesiones__title">{{ classroom.name }}</h1>
+      <p class="page-heading__description">Revisa los aciertos y oportunidades de mejora de cada estudiante.</p>
+    </div>
+    <a class="btn btn--ghost teacher-heading__action" href="{{ url_for('classroom_detail', ref=classroom_ref(classroom.institutional_id)) }}"><span aria-hidden="true">←</span> Volver a estudiantes</a>
+  </header>
+
+  <section class="sessions-history teacher-panel" aria-labelledby="progressTitle">
+    <div class="sessions-history__header">
+      <div>
+        <p class="page-heading__eyebrow">Resultados individuales</p>
+        <h2 id="progressTitle">Avance de estudiantes</h2>
+      </div>
+      <span class="panel-count">{{ progress_rows|length }} estudiante{{ '' if progress_rows|length == 1 else 's' }}</span>
+    </div>
+
+    {% set selected_period = namespace(anio=none) %}
+    {% for p in periodos %}
+      {% if selected_periodo_id == p.id %}{% set selected_period.anio = p.anio %}{% endif %}
+    {% endfor %}
+    <div class="period-filter" data-period-filter role="group" aria-label="Filtrar avance por periodo académico">
+      <label class="period-filter__field" for="periodYearSelect">
+        <span class="period-filter__label">Año</span>
+        <select class="period-filter__select" id="periodYearSelect" data-period-year>
+          <option value="">Todos los años</option>
+          {% for anio in periodos | map(attribute='anio') | unique | sort %}
+          <option value="{{ anio }}"{% if selected_period.anio == anio %} selected{% endif %}>{{ anio }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="period-filter__field period-filter__field--period" for="periodSelect">
+        <span class="period-filter__label">Periodo</span>
+        <select class="period-filter__select" id="periodSelect" data-period-select>
+          <option value="">Todos los periodos</option>
+          {% for p in periodos %}
+          <option value="{{ p.id }}" data-anio="{{ p.anio }}"{% if selected_periodo_id == p.id %} selected{% endif %}>{{ p.nombre }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="period-filter__field period-filter__field--tema" for="temaSelect">
+        <span class="period-filter__label">Tema</span>
+        <select class="period-filter__select" id="temaSelect" data-tema-select>
+          <option value="">Todos los temas</option>
+          {% for t in temas %}
+          <option value="{{ t.id }}" data-periodo="{{ t.id_periodo }}"{% if selected_tema_id == t.id %} selected{% endif %}>{{ t.nombre }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    {% if progress_rows %}
+    <div class="sessions-table-wrap" tabindex="0" role="region" aria-label="Avance del aula; desplázate horizontalmente para ver todas las columnas">
+      <table class="sessions-table classroom-table progress-table">
+        <caption class="visually-hidden">Avance de los estudiantes de {{ classroom.name }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Estudiante</th>
+            <th scope="col">Resultados por material</th>
+            <th scope="col" class="table-tally-column">Aciertos</th>
+            <th scope="col" class="table-action-column">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in progress_rows %}
+          <tr class="table-row--clickable">
+            <td>
+              <a class="table-row-link" href="{{ url_for('student_detail', ref=student_ref(classroom.institutional_id, row.student.institutional_id)) }}" aria-label="Ver las respuestas de {{ row.student.full_name }}">
+                <strong>{{ row.student.full_name }}</strong>
+              </a>
+            </td>
+            <td>
+              {% if row.materials %}
+              <ul class="material-progress-list" aria-label="Resultados por material de {{ row.student.full_name }}">
+                {% for material in row.materials %}
+                <li class="material-progress material-progress--{{ material.severity }}">
+                  <div class="material-progress__label">
+                    <span class="material-progress__name{{ ' material-progress__name--conversation' if material.is_conversation }}">{{ material.name }}</span>
+                    <span class="material-progress__value">{{ material.correct }}/{{ material.total }} <span class="material-progress__percent">({{ material.percent }}%)</span></span>
+                  </div>
+                  <div class="material-progress__track" role="progressbar" aria-valuenow="{{ material.percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ material.name }}: {{ material.correct }} de {{ material.total }} respuestas correctas">
+                    <div class="material-progress__fill" style="width: {{ material.percent }}%;"></div>
+                  </div>
+                </li>
+                {% endfor %}
+              </ul>
+              {% else %}
+              <span class="no-results"><span aria-hidden="true">—</span> Sin interacciones todavía</span>
+              {% endif %}
+            </td>
+            <td class="table-tally-column"><strong class="progress-tally" aria-label="{{ row.correct }} aciertos de {{ row.total }} interacciones">{{ row.correct }}/{{ row.total }}</strong></td>
+            <td class="table-action-column"><span class="table-action">Ver respuestas <span aria-hidden="true">→</span></span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <span aria-hidden="true">◎</span>
+      <strong>Aún no hay estudiantes para mostrar</strong>
+      <p>El avance aparecerá aquí cuando el aula tenga estudiantes matriculados.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/period_filter.js') }}"></script>
+{% endblock %}

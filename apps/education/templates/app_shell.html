@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#132a5e">
+  <meta name="description" content="Aplicación docente para preparar y revisar interacciones orales con MAXCIM.">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MAXCIM">
+  <title>{% block title %}MAXCIM Docentes{% endblock %}</title>
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/maxcim.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">MX</div>
+        <div class="sidebar__name">MAXCIM</div>
+        {% if demo_mode %}<span class="sidebar__environment">PRUEBAS</span>{% endif %}
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="{{ url_for('dashboard') }}" class="sidebar__link {{ 'sidebar__link--active' if active_nav == 'tablon' else '' }}">
+          <span class="sidebar__icon">🏠</span>Tablón
+        </a>
+        <a href="{{ url_for('temas') }}" class="sidebar__link {{ 'sidebar__link--active' if active_nav == 'temas' else '' }}">
+          <span class="sidebar__icon">🏷️</span>Temas
+        </a>
+        <a href="{{ url_for('material') }}" class="sidebar__link {{ 'sidebar__link--active' if active_nav == 'material' else '' }}">
+          <span class="sidebar__icon">📁</span>Material
+        </a>
+      </nav>
+    </aside>
+
+    <div class="main">
+
+      <header class="topbar">
+        <button type="button" class="topbar__toggle" id="sidebarToggle" aria-label="Mostrar/ocultar menú">☰</button>
+
+        <div class="profile">
+          <button type="button" class="profile__trigger" id="profileTrigger">
+            <div class="profile__avatar">
+              {% if user.photo_url %}<img class="profile__avatar-img" src="{{ user.photo_url }}" alt="" referrerpolicy="no-referrer">{% endif %}
+              {{ user.initials }}
+            </div>
+            <div class="profile__info">
+              <div class="profile__name">{{ user.name }}</div>
+              <div class="profile__role">{{ user.role }}</div>
+            </div>
+            <span class="profile__caret">▾</span>
+          </button>
+          <div class="profile__menu" id="profileMenu">
+            <div class="profile__session-id">ID institucional: {{ user.id }}</div>
+            <form action="{{ url_for('logout') }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="profile__menu-danger">Cerrar sesión</button>
+            </form>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/pwa.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

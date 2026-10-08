@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#132a5e">
+  <meta name="description" content="Aprende jugando con MAXCIM.">
+  <title>Acceso institucional · MAXCIM</title>
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/maxcim.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body class="auth-body">
+  <main class="auth-layout">
+    <section class="auth-brand" aria-labelledby="brandTitle">
+      <div class="auth-brand__glow auth-brand__glow--one" aria-hidden="true"></div>
+      <div class="auth-brand__glow auth-brand__glow--two" aria-hidden="true"></div>
+
+      <div class="auth-brand__content">
+        <div class="auth-brand__identity">
+          <div class="auth-brand__mark" aria-hidden="true">MX</div>
+          <div>
+            <span class="auth-brand__name">MAXCIM</span>
+            <span class="auth-brand__school">Colegio CIMA</span>
+          </div>
+        </div>
+
+        <div class="auth-brand__message">
+          <p class="auth-brand__eyebrow">{{ 'Entorno de pruebas · Colegio CIMA' if demo_mode else 'Experiencias de aprendizaje' }}</p>
+          <h1 id="brandTitle">Historias que despiertan ideas.</h1>
+          <p>Un espacio para crear, jugar y aprender en comunidad, donde cada lectura se convierte en una nueva aventura.</p>
+        </div>
+
+        <ul class="auth-brand__features" aria-label="Beneficios de MAXCIM">
+          <li><span aria-hidden="true">01</span> Crea</li>
+          <li><span aria-hidden="true">02</span> Descubre</li>
+          <li><span aria-hidden="true">03</span> Aprende</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="auth-access">
+      <div class="auth-card" aria-labelledby="loginTitle">
+        <header class="auth-card__intro">
+          <p class="auth-card__eyebrow">{{ 'Acceso docente · Pruebas' if demo_mode else 'Portal docente' }}</p>
+          <h2 id="loginTitle">Bienvenido de nuevo</h2>
+          <p>Ingresa con tu cuenta institucional para continuar al sistema.</p>
+        </header>
+
+        {% if error %}
+        <div class="auth-alert auth-alert--error" role="alert">
+          <span class="auth-alert__icon" aria-hidden="true">!</span>
+          <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form method="get" action="{{ url_for('google_login') }}" class="auth-google-form">
+          {% if request.args.get('next') %}
+          <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+          {% endif %}
+          <button type="submit" class="auth-google-button">
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.91h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.4Z"/>
+              <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.37l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"/>
+              <path fill="#FBBC05" d="M6.39 13.92A6.02 6.02 0 0 1 6.07 12c0-.67.12-1.32.32-1.92V7.46H3.04A10 10 0 0 0 2 12c0 1.62.39 3.15 1.04 4.54l3.35-2.62Z"/>
+              <path fill="#EA4335" d="M12 5.95c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.64 9.64 0 0 0 12 2a10 10 0 0 0-8.96 5.46l3.35 2.62C7.18 7.71 9.39 5.95 12 5.95Z"/>
+            </svg>
+            <span>{{ 'Entrar como docente de prueba' if demo_mode else 'Continuar con Google' }}</span>
+          </button>
+        </form>
+
+        <div class="auth-divider" role="separator"><span>o usa tus credenciales</span></div>
+
+        <form method="post" class="auth-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="auth-field" for="institutional_id">
+            <span>Usuario</span>
+            <input id="institutional_id" name="institutional_id" autocomplete="username" required maxlength="50" placeholder="Ej. jperez" {% if demo_mode %}value="DOC-DEMO-01"{% endif %}>
+          </label>
+          <label class="auth-field" for="credential">
+            <span>Contraseña</span>
+            <input id="credential" type="password" name="credential" autocomplete="current-password" required placeholder="Ingresa tu contraseña" {% if demo_mode %}value="prueba"{% endif %}>
+          </label>
+          <button type="submit" class="btn btn--primary" {% if not password_ready %}disabled{% endif %}>
+            <span>Ingresar a MAXCIM</span>
+            <svg aria-hidden="true" viewBox="0 0 20 20" focusable="false">
+              <path d="m7.5 4 6 6-6 6"/>
+            </svg>
+          </button>
+        </form>
+
+        <p class="auth-card__note">Acceso exclusivo para la comunidad educativa de Colegio CIMA.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

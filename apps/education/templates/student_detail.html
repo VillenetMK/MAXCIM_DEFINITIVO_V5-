@@ -1,0 +1,157 @@
+{% extends "app_shell.html" %}
+
+{% block title %}{{ student.full_name }} · MAXCIM{% endblock %}
+
+{% block content %}
+<div class="teacher-view">
+  <header class="page-heading teacher-heading">
+    <div>
+      <p class="page-heading__eyebrow">{{ classroom.name }} <span aria-hidden="true">/</span> Historial del estudiante</p>
+      <h1 class="sesiones__title">{{ student.full_name }}</h1>
+      <p class="page-heading__description">Preguntas, respuestas y apreciaciones registradas por MAXCIM.</p>
+    </div>
+    <a class="btn btn--ghost teacher-heading__action" href="{{ url_for('classroom_detail', ref=classroom_ref(classroom.institutional_id)) }}"><span aria-hidden="true">←</span> Volver al aula</a>
+  </header>
+
+  <section class="sessions-history teacher-panel" aria-labelledby="interactionsTitle">
+    <div class="sessions-history__header">
+      <div>
+        <p class="page-heading__eyebrow">Historial de aprendizaje</p>
+        <h2 id="interactionsTitle">Interacciones</h2>
+      </div>
+      <span class="panel-count">{{ interactions|length }} registrada{{ '' if interactions|length == 1 else 's' }}</span>
+    </div>
+
+    {% set selected_period = namespace(anio=none) %}
+    {% for p in periodos %}
+      {% if selected_periodo_id == p.id %}{% set selected_period.anio = p.anio %}{% endif %}
+    {% endfor %}
+    <div class="period-filter" data-period-filter role="group" aria-label="Filtrar interacciones por periodo académico">
+      <label class="period-filter__field" for="periodYearSelect">
+        <span class="period-filter__label">Año</span>
+        <select class="period-filter__select" id="periodYearSelect" data-period-year>
+          <option value="">Todos los años</option>
+          {% for anio in periodos | map(attribute='anio') | unique | sort %}
+          <option value="{{ anio }}"{% if selected_period.anio == anio %} selected{% endif %}>{{ anio }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="period-filter__field period-filter__field--period" for="periodSelect">
+        <span class="period-filter__label">Periodo</span>
+        <select class="period-filter__select" id="periodSelect" data-period-select>
+          <option value="">Todos los periodos</option>
+          {% for p in periodos %}
+          <option value="{{ p.id }}" data-anio="{{ p.anio }}"{% if selected_periodo_id == p.id %} selected{% endif %}>{{ p.nombre }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="period-filter__field period-filter__field--tema" for="temaSelect">
+        <span class="period-filter__label">Tema</span>
+        <select class="period-filter__select" id="temaSelect" data-tema-select>
+          <option value="">Todos los temas</option>
+          {% for t in temas %}
+          <option value="{{ t.id }}" data-periodo="{{ t.id_periodo }}"{% if selected_tema_id == t.id %} selected{% endif %}>{{ t.nombre }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="period-filter__field period-filter__field--material" for="materialSelect">
+        <span class="period-filter__label">Material</span>
+        <select class="period-filter__select" id="materialSelect" data-material-select{% if selected_tema_id is none %} disabled{% endif %}>
+          <option value="">Todos los materiales</option>
+          {% for m in materials %}
+          <option value="{{ m.id }}"{% if selected_material_id == m.id %} selected{% endif %}>{{ m.nombre_material }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <section class="period-breakdown" aria-labelledby="periodBreakdownTitle">
+      <div class="period-breakdown__heading">
+        <p class="page-heading__eyebrow">Historial acumulado</p>
+        <h3 id="periodBreakdownTitle">Rendimiento por periodo</h3>
+      </div>
+      {% if periodo_breakdown %}
+      <div class="period-breakdown__stats">
+        {% for item in periodo_breakdown %}
+        <div class="period-breakdown__stat">
+          {% if item.periodo %}
+          <span class="period-breakdown__name">{{ item.periodo.nombre }}</span>
+          {% else %}
+          <span class="period-breakdown__name period-breakdown__name--conversation">Sin periodo</span>
+          {% endif %}
+          <strong aria-label="{{ item.correct }} aciertos de {{ item.total }} interacciones">{{ item.correct }}/{{ item.total }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <span class="period-breakdown__empty">Sin resultados por periodo todavía.</span>
+      {% endif %}
+    </section>
+
+    {% if interactions %}
+    <div class="sessions-table-wrap" tabindex="0" role="region" aria-label="Historial de interacciones; desplázate horizontalmente para ver todas las columnas">
+      <table class="sessions-table interaction-detail-table">
+        <caption class="visually-hidden">Interacciones registradas de {{ student.full_name }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Fecha</th>
+            <th scope="col">Material</th>
+            <th scope="col">Pregunta</th>
+            <th scope="col">Respuesta del estudiante</th>
+            <th scope="col">Apreciación del robot</th>
+            <th scope="col">Resultado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for interaction in interactions %}
+          <tr>
+            <td class="interaction-date">
+              {% if interaction.fecha_hora %}
+              {% set local_fecha_hora = interaction.fecha_hora | local_dt %}
+              <time datetime="{{ interaction.fecha_hora.isoformat() }}Z">{{ local_fecha_hora.strftime('%d/%m/%Y') }}<span>{{ local_fecha_hora.strftime('%H:%M') }}</span></time>
+              {% else %}
+              <span aria-label="Fecha no registrada">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if interaction.material %}
+              <strong>{{ interaction.material.nombre_material }}</strong>
+              {% else %}
+              <span class="material-tag material-tag--conversation">Conversación</span>
+              {% endif %}
+            </td>
+            <td>{{ interaction.pregunta }}</td>
+            <td>
+              <p class="interaction-answer__text">{{ interaction.respuesta }}</p>
+              {% if interaction.path_audio_rpta %}
+              <audio class="interaction-answer__audio" controls preload="none" src="{{ media_url(interaction.path_audio_rpta) }}">
+                Tu navegador no puede reproducir este audio.
+              </audio>
+              {% endif %}
+            </td>
+            <td>{{ interaction.apreciacion_robot }}</td>
+            <td>
+              <span class="answer-mark answer-mark--{{ 'correct' if interaction.rpta_correcta else 'incorrect' }}">
+                <span aria-hidden="true">{{ '✓' if interaction.rpta_correcta else '✕' }}</span>
+                {{ 'Correcta' if interaction.rpta_correcta else 'Incorrecta' }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <span aria-hidden="true">◎</span>
+      <strong>Este estudiante aún no tiene interacciones</strong>
+      <p>Sus preguntas, respuestas y apreciaciones aparecerán aquí cuando empiece a trabajar con MAXCIM.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/period_filter.js') }}"></script>
+{% endblock %}

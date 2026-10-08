@@ -1,0 +1,81 @@
+{
+    "HOME-BRAZO-DERECHO": {
+        "name": "HOME-BRAZO-DERECHO",
+        "mode": "sequence",
+        "sequence": [
+            "HOME-CH6",
+            "HOME-CH5",
+            "HOME-CH4"
+        ],
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    },
+    "SALUDOMILITARD": {
+        "name": "SALUDOMILITARD",
+        "sequence": [
+            "B2-SM1",
+            "B2-SM2",
+            "B2-SM3"
+        ],
+        "created_at": "2026-05-27 17:22:11",
+        "updated_at": "2026-05-27 17:22:11"
+    },
+    "DARMANODERECHA": {
+        "name": "DARMANODERECHA",
+        "mode": "sequence",
+        "sequence": [
+            "B2-DARMANO1",
+            "B2-DARMANO2"
+        ],
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    },
+    "HOME-BRAZO-IZQUIERDO": {
+        "name": "HOME-BRAZO-IZQUIERDO",
+        "mode": "sequence",
+        "sequence": [
+            "HOME-CH2",
+            "HOME-CH1",
+            "HOME-CH0"
+        ],
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    },
+    "BRAZOSARRIBA": {
+        "name": "BRAZOSARRIBA",
+        "sequence": [
+            [
+                "B1-EXT",
+                "B2-EXT"
+            ]
+        ],
+        "created_at": "2026-06-08 13:03:21",
+        "updated_at": "2026-06-08 13:03:21"
+    },
+    "EXTENDER-DOS-BRAZOS": {
+        "name": "EXTENDER-DOS-BRAZOS",
+        "mode": "parallel",
+        "sequence": [
+            "B1-EXT",
+            "B2-EXT"
+        ],
+        "wait": 2.0,
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    },
+    "HOME-DOS-BRAZOS": {
+        "name": "HOME-DOS-BRAZOS",
+        "mode": "parallel",
+        "sequence": [
+            "HOME-CH0",
+            "HOME-CH1",
+            "HOME-CH2",
+            "HOME-CH4",
+            "HOME-CH5",
+            "HOME-CH6"
+        ],
+        "wait": 2.5,
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    }
+}

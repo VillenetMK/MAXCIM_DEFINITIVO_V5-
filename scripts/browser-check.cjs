@@ -1,0 +1,50 @@
+/* Recorrido real del panel. Cuenta temporal creada externamente, sin claves en el repo. */
+const fs=require('node:fs');
+const {chromium}=require('playwright');
+(async()=>{
+ const base=process.env.MAXCIM_TEST_URL||'http://127.0.0.1:8080';
+ const creds=JSON.parse(fs.readFileSync(process.env.MAXCIM_TEST_CREDENTIALS,'utf8'));
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{
+  const context=await browser.newContext({viewport:{width:1440,height:1050}});
+  const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto(base);
+  await page.locator('#login-form input[name=username]').fill(creds.username);
+  await page.locator('#login-form input[name=password]').fill(creds.password);
+  await page.locator('#login-form button').click();
+  await page.locator('#app-view').waitFor({state:'visible'});
+  await page.locator('#acquire').click();
+  await page.waitForFunction(()=>document.getElementById('control-state').textContent==='Tu turno');
+  const forward=page.getByRole('button',{name:'Avanzar',exact:true});
+  const box=await forward.boundingBox();
+  await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
+  await page.waitForFunction(()=>document.getElementById('velocity-state').textContent==='0.10 m/s');
+  await page.mouse.up();
+  await page.waitForFunction(()=>document.getElementById('velocity-state').textContent==='0.00 m/s');
+  const other=await context.newPage();await other.goto(base);await other.locator('#app-view').waitFor({state:'visible'});
+  await other.locator('#acquire').click();await other.locator('#notice').waitFor({state:'visible'});
+  if(!(await other.locator('#notice').innerText()).includes('Otro operador'))throw new Error('Segunda pestaña adquirió el control');
+  await other.close();
+  await page.locator('#emergency').click();
+  await page.waitForFunction(()=>document.getElementById('estop-state').textContent.startsWith('SÍ'));
+  await page.locator('#reset').click();
+  await page.waitForFunction(()=>document.getElementById('estop-state').textContent==='No');
+  const image=process.env.MAXCIM_TEST_SCREENSHOT;
+  if(image)await page.screenshot({path:image,fullPage:true});
+  await page.locator('[data-view=team]').click();
+  await page.locator('#task-form input[name=title]').fill('Prueba del navegador');
+  await page.locator('#task-form input[name=owner]').fill('Gabriel');
+  await page.locator('#task-form button').click();
+  await page.getByText('Prueba del navegador',{exact:true}).waitFor();
+  await page.locator('.task select').first().selectOption('working');
+  await page.locator('.column').nth(1).getByText('Prueba del navegador',{exact:true}).waitFor();
+  await page.locator('#note-form textarea').fill('Flujo de control y tablero verificados en Chromium.');
+  await page.locator('#note-form button').click();
+  await page.getByText('Flujo de control y tablero verificados en Chromium.',{exact:true}).waitFor();
+  await page.setViewportSize({width:390,height:844});
+  if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw new Error('Desbordamiento horizontal móvil');
+  await page.locator('#logout').click();await page.locator('#login-view').waitFor({state:'visible'});
+  if(errors.length)throw new Error(errors.join('\n'));
+  console.log('PASS: login, adquisición, avance mantenido, frenado, dos pestañas, emergencia/rearme, tareas/notas, móvil y logout; sin errores JS');
+ }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exit(1);});

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111315"><meta name="description" content="Control manual de movimiento de MAX.">
+  <title>MAX · Control de movimiento</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+<main>
+  <header><a class="brand" href="./" aria-label="MAX inicio">MAX<span>CONTROL DE MOVIMIENTO</span></a><div class="connection"><span id="statusIcon">○</span><span id="status">Desconectado</span></div></header>
+  <section class="connect-panel" aria-label="Conexión con MAX">
+    <div><h1>Al mando de MAX.</h1><p>Conecta y mantén pulsada una dirección.</p></div>
+    <form id="connectForm">
+      <label>Dirección de la Raspberry<input id="address" type="text" placeholder="http://192.168.1.120:8080" spellcheck="false" autocomplete="url" required></label>
+      <label>Código de acceso<input id="token" type="password" placeholder="Código del panel" autocomplete="off" required></label>
+      <button class="primary" id="connect" type="submit">Conectar</button>
+    </form>
+    <p id="message" class="message" role="status" aria-live="polite">Abre el panel desde la misma red que el robot.</p>
+    <a id="localLink" class="local-link" hidden>Abrir panel en la Raspberry →</a>
+  </section>
+  <div class="workspace">
+    <section class="drive-panel" aria-labelledby="driveTitle">
+      <div class="section-heading"><h2 id="driveTitle">Movimiento</h2><span>MANTENER PULSADO</span></div>
+      <div class="dpad" aria-label="Direcciones">
+        <button class="direction forward-left" data-direction="forward-left" disabled type="button" aria-label="Avanzar en curva hacia la izquierda" title="Avanzar en curva hacia la izquierda (Q / W + A / ↑ + ←)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M82 88C40 82 22 63 22 34H7L33 6L59 34H44C44 50 57 62 86 66Z"/></svg></button>
+        <button class="direction forward" data-direction="forward" disabled type="button" aria-label="Avanzar" title="Avanzar (W / ↑)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M50 6L17 40H36V92H64V40H83Z"/></svg></button>
+        <button class="direction forward-right" data-direction="forward-right" disabled type="button" aria-label="Avanzar en curva hacia la derecha" title="Avanzar en curva hacia la derecha (E / W + D / ↑ + →)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M82 88C40 82 22 63 22 34H7L33 6L59 34H44C44 50 57 62 86 66Z" transform="translate(100 0) scale(-1 1)"/></svg></button>
+        <button class="direction left" data-direction="left" disabled type="button" aria-label="Girar a la izquierda" title="Girar a la izquierda (A / ←)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M50 6L17 40H36V92H64V40H83Z" transform="rotate(-90 50 50)"/></svg></button>
+        <button id="stop" class="stop" type="button" aria-label="Detener movimiento" title="Detener movimiento (Espacio)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="33"/></svg></button>
+        <button class="direction right" data-direction="right" disabled type="button" aria-label="Girar a la derecha" title="Girar a la derecha (D / →)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M50 6L17 40H36V92H64V40H83Z" transform="rotate(90 50 50)"/></svg></button>
+        <button class="direction back-left" data-direction="back-left" disabled type="button" aria-label="Retroceder con la parte trasera hacia la izquierda" title="Retroceder con la parte trasera hacia la izquierda (Z / S + A / ↓ + ←)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M82 88C40 82 22 63 22 34H7L33 6L59 34H44C44 50 57 62 86 66Z" transform="translate(0 100) scale(1 -1)"/></svg></button>
+        <button class="direction back" data-direction="back" disabled type="button" aria-label="Retroceder" title="Retroceder (S / ↓)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M50 6L17 40H36V92H64V40H83Z" transform="rotate(180 50 50)"/></svg></button>
+        <button class="direction back-right" data-direction="back-right" disabled type="button" aria-label="Retroceder con la parte trasera hacia la derecha" title="Retroceder con la parte trasera hacia la derecha (C / S + D / ↓ + →)"><svg class="control-shape" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M82 88C40 82 22 63 22 34H7L33 6L59 34H44C44 50 57 62 86 66Z" transform="translate(100 100) scale(-1 -1)"/></svg></button>
+      </div>
+      <p class="hold-hint">WASD o flechas del teclado · Combina dos teclas para girar en movimiento.<br>Curvas rápidas: Q / E hacia adelante · Z / C en reversa.<br>Al soltar todas las teclas, MAX se detiene. Espacio: detener.<br>En reversa, la flecha indica hacia dónde va la parte trasera.</p>
+    </section>
+    <aside>
+      <section class="settings-panel" aria-labelledby="speedTitle">
+        <div class="section-heading"><h2 id="speedTitle">Velocidad</h2><span>CONTROL MANUAL</span></div>
+        <label class="range-label" for="speed">Avance <output id="speedValue">0,05 <small>m/s</small></output></label>
+        <input id="speed" type="range" min="0.03" max="0.15" step="0.01" value="0.05">
+        <div class="range-ends"><span>0,03 m/s</span><span>0,15 m/s</span></div>
+        <label class="range-label" for="turn">Giro <output id="turnValue">0,25 <small>rad/s</small></output></label>
+        <input id="turn" type="range" min="0.10" max="0.40" step="0.05" value="0.25">
+        <div class="range-ends"><span>0,10 rad/s</span><span>0,40 rad/s</span></div>
+      </section>
+      <section class="telemetry-panel" aria-labelledby="robotTitle">
+        <div class="section-heading"><h2 id="robotTitle">Robot</h2><span id="mode">SIN CONEXIÓN</span></div>
+        <dl><div><dt>LiDAR</dt><dd id="lidarState">— Sin datos</dd></div><div><dt>Odometría</dt><dd id="odomState">— Sin datos</dd></div><div><dt>Velocidad medida</dt><dd id="measured">— m/s</dd></div></dl>
+        <p class="note">La parada depende de la comunicación con la base. Mantén el corte físico de alimentación al alcance.</p>
+      </section>
+    </aside>
+  </div>
+  <footer><span>MAX / CONTROL LOCAL</span><span>LiDAR + encoders · Sin IMU</span></footer>
+</main>
+</body>
+</html>

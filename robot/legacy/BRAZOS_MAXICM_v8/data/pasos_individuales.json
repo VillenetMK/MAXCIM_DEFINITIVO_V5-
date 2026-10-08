@@ -1,0 +1,128 @@
+{
+    "B2-SM1": {
+        "channel": 4,
+        "angle": 270,
+        "interval": 3,
+        "delay": 1.0
+    },
+    "B2-SM2": {
+        "channel": 5,
+        "angle": 0,
+        "interval": 1,
+        "delay": 0.6
+    },
+    "B2-SM3": {
+        "channel": 6,
+        "angle": 45,
+        "interval": 8,
+        "delay": 0.1
+    },
+    "HOME-CH4": {
+        "channel": 4,
+        "angle": 135,
+        "interval": 10,
+        "delay": 0.5
+    },
+    "HOME-CH5": {
+        "channel": 5,
+        "angle": 50,
+        "interval": 10,
+        "delay": 0.2
+    },
+    "HOME-CH6": {
+        "channel": 6,
+        "angle": 0,
+        "interval": 15,
+        "delay": 0.5
+    },
+    "B1-EXT": {
+        "channel": 0,
+        "angle": 0,
+        "interval": 5,
+        "delay": 0.0
+    },
+    "B2-DARMANO1": {
+        "channel": 4,
+        "angle": 190,
+        "interval": 5,
+        "delay": 0.5
+    },
+    "B2-DARMANO2": {
+        "channel": 6,
+        "angle": 50,
+        "interval": 5,
+        "delay": 0.5
+    },
+    "B2-EXT": {
+        "channel": 4,
+        "angle": 270,
+        "interval": 5,
+        "delay": 0.0
+    },
+    "HOME-CH0": {
+        "channel": 0,
+        "angle": 135,
+        "interval": 10,
+        "delay": 0.5
+    },
+    "HOME-CH1": {
+        "channel": 1,
+        "angle": 110,
+        "interval": 10,
+        "delay": 0.2
+    },
+    "HOME-CH2": {
+        "channel": 2,
+        "angle": 75,
+        "interval": 10,
+        "delay": 0.5
+    },
+    "Brazoa65": {
+        "channel": 0,
+        "angle": 65,
+        "interval": 5,
+        "delay": 0.5
+    },
+    "Levantar brazo izquierdo": {
+        "channel": 0,
+        "angle": 19,
+        "interval": 5,
+        "delay": 0.5
+    },
+    "Dar Mano Izquierda": {
+        "channel": 6,
+        "angle": 116,
+        "interval": 5,
+        "delay": 0.5
+    },
+    "CH2 = Codo Vertica": {
+        "channel": 6,
+        "angle": 4,
+        "interval": 5,
+        "delay": 0.5
+    },
+    "Brazo 1 IZQ Codo Vert Ch 2": {
+        "channel": 2,
+        "angle": 8,
+        "interval": 1,
+        "delay": 0.5
+    },
+    "Brazo 1 IZQ Hombro Ch 0": {
+        "channel": 0,
+        "angle": 102,
+        "interval": 1,
+        "delay": 0.5
+    },
+    "H0_RAPIDO": {
+        "channel": 0,
+        "angle": 135,
+        "interval": 5,
+        "delay": 1.0
+    },
+    "ss-p1": {
+        "channel": 0,
+        "angle": 0,
+        "interval": 5,
+        "delay": 0.5
+    }
+}

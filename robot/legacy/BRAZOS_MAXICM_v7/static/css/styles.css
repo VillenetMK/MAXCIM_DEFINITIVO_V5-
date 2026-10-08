@@ -1,0 +1,756 @@
+/* ============================================================
+   ESTILOS PREMIUM - TERMINAL DE CONTROL BRAZOS ROBÓTICOS
+   ============================================================ */
+
+:root {
+    --bg-main: #090d16;
+    --bg-card: #111827;
+    --bg-input: #1f2937;
+    --border-color: #374151;
+    --border-glow: #2a3b5c;
+
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+
+    /* Colores Temáticos Neon */
+    --clr-blue: #3b82f6;
+    --clr-blue-glow: rgba(59, 130, 246, 0.45);
+
+    --clr-green: #10b981;
+    --clr-green-glow: rgba(16, 185, 129, 0.45);
+
+    --clr-purple: #8b5cf6;
+    --clr-purple-glow: rgba(139, 92, 246, 0.45);
+
+    --clr-orange: #f97316;
+    --clr-orange-glow: rgba(249, 115, 22, 0.45);
+
+    --clr-red: #ef4444;
+    --clr-red-glow: rgba(239, 68, 68, 0.45);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-main);
+    background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+    background-attachment: fixed;
+    margin: 0;
+    padding: 30px 20px;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* ============================================================
+   TIPOGRAFÍAS Y ENCABEZADOS
+   ============================================================ */
+
+h1, h2, h3 {
+    font-family: "Outfit", sans-serif;
+    font-weight: 700;
+    margin-top: 0;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.5em;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 25px;
+    text-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+}
+
+h2 {
+    font-size: 1.5em;
+    color: #f3f4f6;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+    margin-bottom: 15px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subtitle {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin-top: -10px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+/* ============================================================
+   CELDAS DE INFORMACIÓN GENERAL
+   ============================================================ */
+
+.info-box {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    padding: 14px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 1.05em;
+    color: #93c5fd;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.05);
+}
+
+.serial-box {
+    background: rgba(17, 24, 39, 0.7);
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.92em;
+    color: var(--text-secondary);
+    backdrop-filter: blur(10px);
+}
+
+.highlight {
+    color: #60a5fa;
+}
+
+.status-running {
+    color: var(--clr-orange);
+    font-weight: 600;
+}
+
+.status-free {
+    color: var(--clr-green);
+    font-weight: 600;
+}
+
+.home-global {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* ============================================================
+   TARJETAS Y GRID LAYOUT
+   ============================================================ */
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+@media(max-width: 900px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--border-glow), transparent);
+}
+
+/* ============================================================
+   CONTROLES DE SERVOMOTORES
+   ============================================================ */
+
+.servo-control {
+    border-bottom: 1px solid rgba(55, 65, 81, 0.4);
+    padding: 18px 0;
+}
+
+.servo-control:last-child {
+    border-bottom: none;
+}
+
+.servo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.ch-badge {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 700;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    margin-left: 6px;
+}
+
+.servo-angle {
+    color: #60a5fa;
+    font-weight: 700;
+    font-size: 1.15em;
+    background: rgba(59, 130, 246, 0.05);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* RANGES PERSONALIZADOS */
+.controls input[type="range"] {
+    flex-grow: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    border-radius: 4px;
+    background: #1f2937;
+    outline: none;
+    cursor: pointer;
+    border: 1px solid #374151;
+}
+
+.controls input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #60a5fa;
+    box-shadow: 0 0 10px var(--clr-blue-glow);
+    cursor: pointer;
+    transition: transform 0.1s;
+    border: 2px solid #ffffff;
+}
+
+.controls input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+
+button {
+    font-family: "Outfit", sans-serif;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    margin: 2px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.9em;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.15);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+.btn-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.btn-orange {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+}
+
+.btn-green {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-red {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.btn-purple {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
+.btn-purple-outline {
+    background: transparent;
+    border: 1px solid rgba(139, 92, 246, 0.5);
+    color: #a78bfa;
+}
+.btn-purple-outline:hover {
+    background: rgba(139, 92, 246, 0.15);
+}
+
+.btn-dark {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+}
+
+.btn-large {
+    font-size: 1.1em;
+    padding: 12px 30px;
+    border-radius: 10px;
+}
+
+.btn-action {
+    padding: 5px 10px;
+    font-size: 0.85em;
+    border-radius: 6px;
+    margin: 1px;
+}
+
+.btn-action-small {
+    padding: 6px 10px;
+    font-size: 0.85em;
+    border-radius: 6px;
+    min-width: 38px;
+}
+
+/* ============================================================
+   TABLAS DE PASOS Y CONFIGURACIONES
+   ============================================================ */
+
+.pose-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.pose-table th,
+.pose-table td {
+    border: 1px solid rgba(75, 85, 99, 0.4);
+    padding: 12px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.pose-table th {
+    background-color: rgba(31, 41, 55, 0.7);
+    color: #f3f4f6;
+    font-weight: 600;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.95em;
+}
+
+.pose-table td {
+    background-color: rgba(17, 24, 39, 0.2);
+    font-size: 0.92em;
+}
+
+.step-id-column {
+    font-weight: 700;
+    color: #a78bfa !important;
+    text-align: left !important;
+}
+
+.step-motor-column {
+    text-align: left !important;
+}
+
+.ch-badge-table {
+    background: rgba(75, 85, 99, 0.3);
+    color: var(--text-secondary);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.step-angle-column {
+    color: var(--clr-green);
+}
+
+/* EDICIÓN EN FILA DE TABLA */
+.editing-row td {
+    background: rgba(249, 115, 22, 0.05) !important;
+    border-color: rgba(249, 115, 22, 0.35) !important;
+}
+
+.step-id-edit {
+    font-weight: 700;
+    color: var(--clr-orange) !important;
+    text-align: left;
+}
+
+.input-table-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px;
+    border-radius: 6px;
+    width: 100%;
+    outline: none;
+}
+
+.input-table-number {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px;
+    border-radius: 6px;
+    width: 70px;
+    text-align: center;
+    outline: none;
+}
+
+.input-table-select:focus,
+.input-table-number:focus {
+    border-color: var(--clr-orange);
+    box-shadow: 0 0 5px rgba(249, 115, 22, 0.3);
+}
+
+/* ============================================================
+   CREADOR DE FILAS (FORMULARIO SUPERIOR)
+   ============================================================ */
+
+.creator-row {
+    display: flex;
+    gap: 15px;
+    background: rgba(31, 41, 55, 0.4);
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.creator-row input[type="text"],
+.creator-row select,
+.creator-row input[type="number"] {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 8px 12px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.creator-row input[type="text"]:focus,
+.creator-row select:focus,
+.creator-row input[type="number"]:focus {
+    border-color: var(--clr-blue);
+    box-shadow: 0 0 8px var(--clr-blue-glow);
+}
+
+.input-grow {
+    flex-grow: 2;
+    min-width: 200px;
+}
+
+.input-small {
+    width: 70px;
+}
+
+.mini-field label {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* ============================================================
+   CONSTRUCTOR DE COLAS / RUTAS (LÍNEA DE TIEMPO VERTICAL)
+   ============================================================ */
+
+.seq-builder {
+    background: rgba(17, 24, 39, 0.5);
+    border: 2px dashed rgba(75, 85, 99, 0.4);
+    padding: 20px;
+    border-radius: 16px;
+    margin-top: 15px;
+}
+
+.seq-actions {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.sequence-queue {
+    margin-bottom: 25px;
+    background: rgba(9, 13, 22, 0.6);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.empty-queue-text {
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.95em;
+}
+
+/* INDICADORES DE DIRECCIÓN (FLECHAS) */
+.queue-arrow-indicator {
+    color: var(--clr-purple);
+    font-size: 1.6em;
+    line-height: 1;
+    text-shadow: 0 0 10px var(--clr-purple-glow);
+    margin: 4px 0;
+    transform: rotate(90deg); /* Flecha apuntando hacia abajo en flujo vertical */
+}
+
+/* TARJETAS DE PASO EN COLA */
+.queue-card {
+    width: 100%;
+    max-width: 750px;
+    background: rgba(31, 41, 55, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 18px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+}
+
+.sequence-block-card {
+    border-left: 4px solid var(--clr-blue);
+}
+
+.sequence-block-card:hover {
+    border-color: #60a5fa;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+}
+
+.sequence-card-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.card-info-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.step-title {
+    font-weight: 700;
+    color: #f3f4f6;
+    font-size: 1.05em;
+}
+
+.step-sub-detail {
+    font-size: 0.85em;
+}
+
+.detail-home {
+    color: var(--clr-orange);
+    font-weight: 600;
+}
+
+.detail-info {
+    color: #60a5fa;
+}
+
+.detail-info-mv {
+    color: var(--clr-green);
+    font-weight: 500;
+}
+
+.detail-info-qa {
+    color: #c084fc;
+    font-weight: 500;
+}
+
+.detail-unknown {
+    color: var(--text-muted);
+}
+
+/* CONTROLES DE LA TARJETA EN COLA */
+.card-controls {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.btn-small-control {
+    padding: 4px 8px;
+    font-size: 0.8em;
+    border-radius: 5px;
+    background: #374151;
+    border: 1px solid #4b5563;
+    color: var(--text-primary);
+}
+
+.btn-small-control:hover {
+    background: #4b5563;
+}
+
+.btn-small-control.btn-purple {
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    color: #c084fc;
+}
+
+.btn-small-control.btn-purple:hover {
+    background: var(--clr-purple);
+    color: #ffffff;
+}
+
+.btn-small-control.btn-red {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+}
+
+.btn-small-control.btn-red:hover {
+    background: var(--clr-red);
+    color: #ffffff;
+}
+
+/* ============================================================
+   BLOQUES EN PARALELO (MULTIPLE MOTORES)
+   ============================================================ */
+
+.parallel-block-card {
+    border: 1px dashed rgba(167, 139, 250, 0.6);
+    border-left: 4px solid var(--clr-purple);
+    background: rgba(139, 92, 246, 0.04);
+}
+
+.parallel-block-card:hover {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.12);
+}
+
+.card-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.badge-parallel {
+    background: rgba(139, 92, 246, 0.15);
+    color: #c084fc;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.75em;
+    font-weight: 700;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    letter-spacing: 0.05em;
+}
+
+.parallel-items-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    width: 100%;
+}
+
+.parallel-sub-card {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 180px;
+    background: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(75, 85, 99, 0.4);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sub-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sub-step-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.92em;
+}
+
+.btn-sub-remove {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1em;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    display: inline-block;
+}
+
+.btn-sub-remove:hover {
+    color: var(--clr-red);
+}
+
+.sub-card-body {
+    font-size: 0.85em;
+}
+
+/* ETIQUETAS EN SECUENCIA COMPUESTA */
+.parallel-badge-text {
+    background: rgba(139, 92, 246, 0.12);
+    color: #d8b4fe;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.sequence-text {
+    text-align: left !important;
+}
+
+/* ============================================================
+   ESTILOS GENERALES Y MENSAJES VACÍOS
+   ============================================================ */
+
+.empty-text {
+    color: var(--text-muted);
+    font-style: italic;
+}

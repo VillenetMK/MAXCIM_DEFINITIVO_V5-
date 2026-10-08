@@ -1,0 +1,180 @@
+{% extends "app_shell.html" %}
+
+{% block title %}Temas · MAXCIM{% endblock %}
+
+{% block content %}
+<div class="teacher-view temas-view">
+  <header class="page-heading teacher-heading">
+    <div>
+      <p class="page-heading__eyebrow">Organización de material</p>
+      <h1 class="sesiones__title">Temas</h1>
+      <p class="page-heading__description">Crea temas por periodo para encontrar y preparar tus materiales con mayor facilidad.</p>
+    </div>
+  </header>
+
+  <section class="temas-create" aria-labelledby="createTemaTitle">
+    <div class="temas-create__intro">
+      <span class="temas-create__icon" aria-hidden="true">+</span>
+      <div>
+        <p class="page-heading__eyebrow">Nuevo tema</p>
+        <h2 id="createTemaTitle">Agrega una categoría para tus materiales</h2>
+      </div>
+    </div>
+
+    {% set create_periodo_id = selected_periodo_id if selected_periodo_id is not none else current_periodo_id %}
+    <form id="createTemaForm" class="temas-create__form">
+      <label class="temas-create__field temas-create__field--period" for="newTemaPeriodoSelect">
+        <span class="period-filter__label">Periodo</span>
+        <select class="period-filter__select" id="newTemaPeriodoSelect" name="id_periodo" required{% if not periodos %} disabled{% endif %}>
+          {% if not periodos %}
+          <option value="">No hay periodos disponibles</option>
+          {% endif %}
+          {% for p in periodos %}
+          <option value="{{ p.id }}"{% if create_periodo_id == p.id %} selected{% endif %}>{{ p.nombre }} · {{ p.anio }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="temas-create__field temas-create__field--name" for="newTemaNombreInput">
+        <span class="period-filter__label">Nombre del tema</span>
+        <input type="text" class="upload-modal__input" id="newTemaNombreInput" name="nombre" placeholder="Ej.: Animales de la granja" required maxlength="120" autocomplete="off">
+      </label>
+      <button type="submit" class="btn btn--primary temas-create__submit" id="createTemaBtn"{% if not periodos %} disabled{% endif %}>
+        <span aria-hidden="true">+</span> Agregar tema
+      </button>
+      <p class="tema-form-error temas-create__error" id="temasFormError" role="alert" hidden></p>
+    </form>
+  </section>
+
+  <section class="sessions-history teacher-panel temas-list-panel" aria-labelledby="temasListTitle">
+    <div class="sessions-history__header">
+      <div>
+        <p class="page-heading__eyebrow">Biblioteca temática</p>
+        <h2 id="temasListTitle">Tus temas</h2>
+      </div>
+      <span class="panel-count">{{ temas|length }} tema{{ '' if temas|length == 1 else 's' }}</span>
+    </div>
+
+    {% set selected_period = namespace(anio=none) %}
+    {% for p in periodos %}
+      {% if selected_periodo_id == p.id %}{% set selected_period.anio = p.anio %}{% endif %}
+    {% endfor %}
+    <div class="period-filter" data-period-filter role="group" aria-label="Filtrar temas por periodo académico">
+      <label class="period-filter__field" for="temasYearSelect">
+        <span class="period-filter__label">Año</span>
+        <select class="period-filter__select" id="temasYearSelect" data-period-year>
+          <option value="">Todos los años</option>
+          {% for anio in periodos | map(attribute='anio') | unique | sort %}
+          <option value="{{ anio }}"{% if selected_period.anio == anio %} selected{% endif %}>{{ anio }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="period-filter__field period-filter__field--period" for="temasPeriodoSelect">
+        <span class="period-filter__label">Periodo</span>
+        <select class="period-filter__select" id="temasPeriodoSelect" data-period-select>
+          <option value=""{% if selected_periodo_id is none %} selected{% endif %}>Todos los periodos</option>
+          {% for p in periodos %}
+          <option value="{{ p.id }}" data-anio="{{ p.anio }}"{% if selected_periodo_id == p.id %} selected{% endif %}>{{ p.nombre }} · {{ p.anio }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <div class="material__list temas-list" id="temasList">
+      {% if not temas %}
+      <div class="empty-state temas-empty">
+        <span aria-hidden="true">◇</span>
+        <strong>Aún no hay temas{{ '' if selected_periodo_id is none else ' en este periodo' }}</strong>
+        <p>Agrega el primero arriba y úsalo al subir tu próximo material.</p>
+      </div>
+      {% endif %}
+
+      {% set period_group = namespace(id=none) %}
+      {% for t in temas %}
+        {% if selected_periodo_id is none and period_group.id != t.id_periodo %}
+          {% set period_group.id = t.id_periodo %}
+          <div class="temas-period-heading">
+            <span>{{ t.periodo.nombre }}</span>
+            <small>{{ t.periodo.anio }}</small>
+          </div>
+        {% endif %}
+        {% set material_count = material_counts.get(t.id, 0) %}
+        <article class="material-card tema-card" data-tema-id="{{ t.id }}">
+          <div class="material-card__header tema-card__header">
+            <div class="material-card__icon tema-card__icon" aria-hidden="true">T</div>
+            <div class="material-card__meta">
+              <h3 class="material-card__name" data-tema-nombre>{{ t.nombre }}</h3>
+              <p class="material-card__sub">
+                {{ material_count }} material{{ '' if material_count == 1 else 'es' }} asignado{{ '' if material_count == 1 else 's' }}
+              </p>
+            </div>
+            <div class="material-card__tags">
+              <span class="material-card__tag">{{ t.periodo.nombre }} · {{ t.periodo.anio }}</span>
+              <span class="tema-card__count{{ ' tema-card__count--used' if material_count else '' }}">
+                {{ material_count }} material{{ '' if material_count == 1 else 'es' }}
+              </span>
+            </div>
+          </div>
+          <div class="tema-card__footer">
+            {% if material_count %}
+            <p class="tema-card__locked" id="temaDeleteHelp{{ t.id }}">
+              Desasigna {{ 'el material' if material_count == 1 else 'los materiales' }} para poder eliminar este tema.
+            </p>
+            {% else %}
+            <span></span>
+            {% endif %}
+            <div class="tema-card__actions">
+              <button type="button" class="btn btn--ghost tema-rename-btn" data-tema-id="{{ t.id }}" data-tema-periodo="{{ t.periodo.nombre }} · {{ t.periodo.anio }}">Renombrar</button>
+              <button type="button" class="btn btn--danger tema-delete-btn" data-tema-id="{{ t.id }}" data-material-count="{{ material_count }}"{% if material_count %} disabled aria-describedby="temaDeleteHelp{{ t.id }}" title="Este tema tiene materiales asignados"{% endif %}>Eliminar</button>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<div class="overlay tema-overlay" id="renameTemaOverlay" aria-hidden="true">
+  <form class="upload-modal tema-modal" id="renameTemaForm" role="dialog" aria-modal="true" aria-labelledby="renameTemaTitle" aria-describedby="renameTemaDescription">
+    <div class="tema-modal__heading">
+      <div>
+        <p class="page-heading__eyebrow">Editar tema</p>
+        <h2 class="upload-modal__title" id="renameTemaTitle">Renombrar tema</h2>
+      </div>
+      <button type="button" class="tema-modal__close" id="renameTemaCloseBtn" aria-label="Cerrar">×</button>
+    </div>
+    <p class="tema-modal__description" id="renameTemaDescription"></p>
+    <label class="upload-modal__field" for="renameTemaNombreInput">
+      <span class="upload-modal__label">Nuevo nombre</span>
+      <input type="text" class="upload-modal__input" id="renameTemaNombreInput" name="nombre" required maxlength="120" autocomplete="off">
+    </label>
+    <p class="tema-form-error" id="renameTemaError" role="alert" hidden></p>
+    <div class="upload-modal__actions">
+      <button type="button" class="btn btn--ghost" id="renameTemaCancelBtn">Cancelar</button>
+      <button type="submit" class="btn btn--primary" id="renameTemaConfirmBtn">Guardar cambios</button>
+    </div>
+  </form>
+</div>
+
+<div class="overlay tema-overlay" id="deleteTemaOverlay" aria-hidden="true">
+  <div class="upload-modal tema-modal" role="dialog" aria-modal="true" aria-labelledby="deleteTemaTitle" aria-describedby="deleteTemaDescription">
+    <div class="tema-modal__heading">
+      <div>
+        <p class="page-heading__eyebrow tema-modal__eyebrow--danger">Eliminar tema</p>
+        <h2 class="upload-modal__title" id="deleteTemaTitle">Confirma esta acción</h2>
+      </div>
+      <button type="button" class="tema-modal__close" id="deleteTemaCloseBtn" aria-label="Cerrar">×</button>
+    </div>
+    <p class="tema-modal__description" id="deleteTemaDescription">¿Eliminar <strong id="deleteTemaName"></strong>? Esta acción no se puede deshacer.</p>
+    <p class="tema-form-error" id="deleteTemaError" role="alert" hidden></p>
+    <div class="upload-modal__actions">
+      <button type="button" class="btn btn--ghost" id="deleteTemaCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn--danger" id="deleteTemaConfirmBtn">Eliminar tema</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/period_filter.js') }}"></script>
+<script src="{{ url_for('static', filename='js/temas.js') }}"></script>
+{% endblock %}

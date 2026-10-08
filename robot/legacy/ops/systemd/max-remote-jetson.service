@@ -1,0 +1,20 @@
+[Unit]
+Description=Remote Desktop Commander - Jetson MAX
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+Environment=PATH=%h/.local/share/max-remote/node_modules/.bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=XDG_RUNTIME_DIR=/run/user/2002
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/2002/bus
+ExecStart=%h/.local/share/max-remote/node_modules/node/bin/node %h/.local/share/max-remote/node_modules/@wonderwhy-er/desktop-commander/dist/index.js remote
+Restart=always
+RestartSec=10
+TimeoutStopSec=20
+KillMode=control-group
+UMask=0077
+
+[Install]
+WantedBy=default.target

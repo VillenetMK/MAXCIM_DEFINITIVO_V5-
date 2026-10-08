@@ -1,0 +1,12 @@
+{
+  "verified": false,
+  "notes": "Ángulos lógicos heredados. NO son grados mecánicos medidos. Pulsos cero = pendientes. No habilitar hasta medir cada servo bajo supervisión.",
+  "servos": {
+    "0": {"logical_min": 0, "logical_max": 145, "pulse_min": 0, "pulse_max": 0, "home_pulse": 0},
+    "1": {"logical_min": 0, "logical_max": 200, "pulse_min": 0, "pulse_max": 0, "home_pulse": 0},
+    "2": {"logical_min": 0, "logical_max": 75, "pulse_min": 0, "pulse_max": 0, "home_pulse": 0},
+    "4": {"logical_min": 125, "logical_max": 270, "pulse_min": 0, "pulse_max": 0, "home_pulse": 0},
+    "5": {"logical_min": 0, "logical_max": 150, "pulse_min": 0, "pulse_max": 0, "home_pulse": 0},
+    "6": {"logical_min": 0, "logical_max": 270, "pulse_min": 0, "pulse_max": 0, "home_pulse": 0}
+  }
+}

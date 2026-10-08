@@ -1,0 +1,32 @@
+{
+    "RUTINA-SALUDO-DERECHO-Y-HOME": {
+        "name": "RUTINA-SALUDO-DERECHO-Y-HOME",
+        "mode": "sequence",
+        "sequence": [
+            "SALUDOMILITARD",
+            "HOME-BRAZO-DERECHO"
+        ],
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    },
+    "RUTINA-DAR-MANO-DERECHA-Y-HOME": {
+        "name": "RUTINA-DAR-MANO-DERECHA-Y-HOME",
+        "mode": "sequence",
+        "sequence": [
+            "DARMANODERECHA",
+            "HOME-BRAZO-DERECHO"
+        ],
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    },
+    "RUTINA-EXTENDER-DOS-BRAZOS-Y-HOME": {
+        "name": "RUTINA-EXTENDER-DOS-BRAZOS-Y-HOME",
+        "mode": "sequence",
+        "sequence": [
+            "EXTENDER-DOS-BRAZOS",
+            "HOME-DOS-BRAZOS"
+        ],
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    }
+}

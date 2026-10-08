@@ -1,0 +1,12 @@
+{
+    "DARMANODERECHA": {
+        "name": "DARMANODERECHA",
+        "mode": "sequence",
+        "sequence": [
+            "B2-DARMANO1",
+            "B2-DARMANO2"
+        ],
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    }
+}

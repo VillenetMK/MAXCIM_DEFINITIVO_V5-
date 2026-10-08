@@ -1,0 +1,26 @@
+{
+    "B1-EXT": {
+        "channel": 0,
+        "angle": 0,
+        "interval": 5,
+        "delay": 0.5
+    },
+    "HOME-CH0": {
+        "channel": 0,
+        "angle": 135,
+        "interval": 10,
+        "delay": 0.5
+    },
+    "HOME-CH1": {
+        "channel": 1,
+        "angle": 110,
+        "interval": 10,
+        "delay": 0.2
+    },
+    "HOME-CH2": {
+        "channel": 2,
+        "angle": 75,
+        "interval": 10,
+        "delay": 0.5
+    }
+}

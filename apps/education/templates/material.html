@@ -1,0 +1,512 @@
+{% extends "app_shell.html" %}
+
+{% block title %}Material · MAXCIM{% endblock %}
+
+{% block content %}
+<h1 class="material__title">Material</h1>
+
+<div class="material__toolbar">
+  <select class="material__select" id="materialTypeFilter">
+    <option value="">Todos los tipos</option>
+    <option value="cuento">Cuentos</option>
+    <option value="oracion">Oraciones</option>
+    <option value="oracion_imagen">Oraciones con imágenes</option>
+    <option value="bits">Bits</option>
+  </select>
+  <input type="text" class="material__search" id="materialSearch" placeholder="Buscar material...">
+  <div class="material__toolbar-actions">
+    <button type="button" class="material__ai-btn" id="storyOpenBtn">
+      <span>✨</span>Crear con IA
+    </button>
+    <button type="button" class="material__add-btn" id="uploadOpenBtn"><span>+</span>Subir archivo</button>
+  </div>
+</div>
+
+<div class="overlay" id="storyOverlay">
+  <form class="story-modal" id="storyForm">
+    <div class="upload-modal__title" id="storyModalTitle">Crear un cuento con IA</div>
+    <p class="story-modal__description" id="storyModalDescription">Define aquí los datos del cuento y la IA prepara un borrador editable.</p>
+
+    <div class="upload-modal__type-toggle" role="tablist" aria-label="Tipo de contenido a generar">
+      <button type="button" class="upload-modal__type-btn is-active" id="storyTypeCuentoBtn" data-type="cuento" role="tab" aria-selected="true">📖 Cuento</button>
+      <button type="button" class="upload-modal__type-btn" id="storyTypeOracionBtn" data-type="oracion" role="tab" aria-selected="false">✏️ Oraciones</button>
+      <button type="button" class="upload-modal__type-btn" id="storyTypeOracionImagenBtn" data-type="oracion_imagen" role="tab" aria-selected="false">🖼️ Oraciones con imágenes</button>
+      <button type="button" class="upload-modal__type-btn" id="storyTypeBitsBtn" data-type="bits" role="tab" aria-selected="false">📇 Bits</button>
+    </div>
+
+    <div class="story-modal__grid" id="storyCuentoFields">
+      <label class="story-field">
+        <span>Personaje principal</span>
+        <input type="text" id="storyCharacter" required maxlength="120" placeholder="Ej.: una zorrita llamada Luna">
+      </label>
+      <label class="story-field">
+        <span>Lugar de la historia</span>
+        <input type="text" id="storySetting" required maxlength="160" placeholder="Ej.: un bosque mágico">
+      </label>
+      <label class="story-field">
+        <span>Nivel o grado</span>
+        <input type="text" id="storyGrade" required maxlength="100" placeholder="Ej.: 3.° de primaria">
+      </label>
+      <label class="story-field">
+        <span>Duración aproximada del cuento</span>
+        <input type="number" id="storyDuration" required min="1" max="15" step="1" value="5" inputmode="numeric">
+        <small>Entre 1 y 15 minutos. Puede variar algunos segundos al narrarse.</small>
+      </label>
+      <label class="story-field story-field--wide">
+        <span>Objetivo pedagógico</span>
+        <input type="text" id="storyObjective" required maxlength="240" placeholder="Ej.: practicar la escucha activa">
+      </label>
+      <label class="story-field story-field--wide">
+        <span>Otros detalles para el cuento</span>
+        <textarea id="storyDetails" maxlength="1000" placeholder="Amigos, problema que resolver, objetos, final deseado…"></textarea>
+      </label>
+    </div>
+
+    <div class="story-modal__grid" id="storySentenceFields" hidden>
+      <label class="story-field story-field--wide">
+        <span>Tema de las oraciones</span>
+        <input type="text" id="sentenceTopic" required maxlength="160" placeholder="Ej.: los animales de la granja">
+      </label>
+      <label class="story-field">
+        <span>Nivel o grado</span>
+        <input type="text" id="sentenceGrade" required maxlength="100" placeholder="Ej.: 3.° de primaria">
+      </label>
+      <label class="story-field">
+        <span>Cantidad de oraciones</span>
+        <input type="number" id="sentenceCount" required min="1" max="40" step="1" value="10" inputmode="numeric">
+      </label>
+      <label class="story-field story-field--wide">
+        <span>Detalles opcionales</span>
+        <textarea id="sentenceDetails" maxlength="1000" placeholder="Vocabulario a practicar, dificultad, contexto…"></textarea>
+      </label>
+    </div>
+
+    <div class="story-modal__grid" id="storyImageFields" hidden>
+      <label class="story-field story-field--wide">
+        <span>Tema de las oraciones</span>
+        <input type="text" id="sentenceImageTopic" required maxlength="160" placeholder="Ej.: las profesiones">
+      </label>
+      <label class="story-field">
+        <span>Nivel o grado</span>
+        <input type="text" id="sentenceImageGrade" required maxlength="100" placeholder="Ej.: 2.° de primaria">
+      </label>
+      <label class="story-field">
+        <span>Cantidad de oraciones</span>
+        <input type="number" id="sentenceImageCount" required min="1" max="20" step="1" value="8" inputmode="numeric">
+      </label>
+      <label class="story-field story-field--wide">
+        <span>Detalles opcionales</span>
+        <textarea id="sentenceImageDetails" maxlength="1000" placeholder="Vocabulario, contexto, qué debe mostrar cada imagen…"></textarea>
+      </label>
+    </div>
+
+    <div class="story-modal__grid" id="storyBitsFields" hidden>
+      <label class="story-field story-field--wide">
+        <span>Sílabas a trabajar</span>
+        <input type="text" id="bitsSyllables" maxlength="120" placeholder="Ej.: ma, me, mi, mo, mu">
+        <small id="bitsSyllablesSummary">Sepáralas con comas o espacios. Las palabras empezarán con alguna de ellas.</small>
+        <p class="story-field__error" id="bitsSyllablesError" role="alert" hidden>Escribe al menos una sílaba.</p>
+      </label>
+      <label class="story-field">
+        <span>Cantidad de palabras</span>
+        <input type="number" id="bitsCount" required min="1" max="20" step="1" value="{{ bits_default_words }}" inputmode="numeric">
+        <small>Entre 1 y 20.</small>
+      </label>
+      <label class="story-field">
+        <span>Sílabas por palabra</span>
+        <input type="text" id="bitsSyllableCount" maxlength="{{ max_bits_syllable_count_chars }}" placeholder="Ej.: 3 sílabas, de 2 a 3 sílabas">
+        <small>Con tus propias palabras. Si lo dejas vacío: {{ bits_default_syllable_count }}.</small>
+      </label>
+      <label class="story-field story-field--wide">
+        <span>Detalles opcionales</span>
+        <textarea id="bitsDetails" maxlength="1000" placeholder="Vocabulario a evitar, contexto, tema de las palabras…"></textarea>
+      </label>
+    </div>
+
+    <div class="upload-modal__actions">
+      <button type="button" class="btn btn--ghost" id="storyCancelBtn">Cancelar</button>
+      <button type="submit" class="btn btn--primary" id="storyGenerateBtn">Generar borrador</button>
+    </div>
+  </form>
+</div>
+
+<div class="overlay" id="uploadOverlay">
+  <div class="upload-modal">
+    <div class="upload-modal__title">Nuevo material</div>
+
+    <div class="upload-modal__type-toggle" role="tablist" aria-label="Tipo de material">
+      <button type="button" class="upload-modal__type-btn is-active" id="uploadTypeCuentoBtn" data-type="cuento" role="tab" aria-selected="true">📖 Cuento</button>
+      <button type="button" class="upload-modal__type-btn" id="uploadTypeOracionBtn" data-type="oracion" role="tab" aria-selected="false">✏️ Oraciones</button>
+      <button type="button" class="upload-modal__type-btn" id="uploadTypeOracionImagenBtn" data-type="oracion_imagen" role="tab" aria-selected="false">🖼️ Con imágenes</button>
+      <button type="button" class="upload-modal__type-btn" id="uploadTypeBitsBtn" data-type="bits" role="tab" aria-selected="false">📇 Bits</button>
+    </div>
+
+    <label class="dropzone" id="dropzone" for="uploadFileInput">
+      <div class="dropzone__icon">📤</div>
+      <div class="dropzone__text" id="dropzoneText">Arrastra el archivo aquí o haz clic para seleccionar</div>
+      <div class="dropzone__hint" id="dropzoneHint">DOC, TXT o PDF · máx. 50 MB</div>
+      <input type="file" id="uploadFileInput" accept=".doc,.docx,.txt,.pdf" hidden>
+    </label>
+
+    <div class="upload-modal__manual" id="uploadManualOption" hidden>
+      <span class="upload-modal__manual-divider">o</span>
+      <button type="button" class="btn btn--ghost upload-modal__manual-btn" id="manualEditorOpenBtn">✏️ Modo editor: escribir las oraciones a mano</button>
+    </div>
+
+    <div class="upload-modal__row">
+      <input type="text" class="upload-modal__input" id="uploadTitleInput" placeholder="Título del cuento">
+    </div>
+
+    <div class="upload-modal__actions">
+      <button type="button" class="btn btn--ghost" id="uploadCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn--primary" id="uploadStartBtn" disabled>Subir</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="deleteOverlay">
+  <div class="upload-modal">
+    <div class="upload-modal__title">Eliminar material</div>
+    <p class="page-heading__description">¿Eliminar <strong id="deleteMaterialName"></strong>? Esta acción no se puede deshacer.</p>
+    <div class="upload-modal__actions">
+      <button type="button" class="btn btn--ghost" id="deleteCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn--danger" id="deleteConfirmBtn">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="loadingOverlay">
+  <div class="loading-modal">
+    <div class="spinner" id="loadingSpinner"></div>
+    <div class="loading-modal__text" id="loadingText">Procesando documento...</div>
+    <button type="button" class="btn btn--ghost" id="loadingCloseBtn" hidden>Cerrar</button>
+  </div>
+</div>
+
+<div class="overlay" id="resultOverlay">
+  <div class="result-modal" role="dialog" aria-modal="true" aria-label="Revisar material">
+    <div class="result-modal__title editable-title" id="resultModalTitle" contenteditable="true" spellcheck="false" role="textbox" aria-label="Nombre del material" title="Toca para editar el nombre del material">Contenido generado</div>
+    <div class="result-modal__subtitle" id="resultSubtitle">A partir del documento original</div>
+
+    <ol class="review-stepper" id="reviewStepper" aria-label="Pasos para revisar el cuento" hidden>
+      <li class="review-stepper__item" data-stepper="text"><span class="review-stepper__num" aria-hidden="true">1</span><span class="review-stepper__label">Texto</span></li>
+      <li class="review-stepper__item" data-stepper="scenes"><span class="review-stepper__num" aria-hidden="true">2</span><span class="review-stepper__label">Escenas</span></li>
+      <li class="review-stepper__item" data-stepper="questions"><span class="review-stepper__num" aria-hidden="true">3</span><span class="review-stepper__label">Preguntas</span></li>
+    </ol>
+    <h3 class="review-stepper__heading" id="reviewStepHeading" aria-live="polite" hidden></h3>
+
+    <div class="result-modal__columns">
+      <details class="review-step" data-review-step="text" open>
+        <summary class="review-step__summary">
+          <span class="review-step__title">1. Revisar texto</span>
+          <span class="step-badge" data-review-status="text">Editable</span>
+        </summary>
+        <div class="result-col">
+          <div class="result-block" id="resultTranscribedBlock">
+            <div class="result-block__label" id="resultTranscribedLabel">Texto completo</div>
+            <div class="result-block__box" id="resultTranscribedText" contenteditable="true" spellcheck="false"></div>
+          </div>
+          <div class="result-block result-block--divider" id="resultSummaryBlock">
+            <div class="result-block__label">Resumen del texto</div>
+            <div class="result-block__box result-block__box--short" id="resultSummaryText" contenteditable="true" spellcheck="false"></div>
+          </div>
+          <div class="result-block" id="resultSentencesBlock" hidden>
+            <div class="result-block__label" id="resultSentencesLabel">Oraciones para revisar</div>
+            <p class="questions-review-note" id="resultSentencesNote">Corrige cada oración; deja vacías las que no quieras guardar.</p>
+            <ol class="sentences-review" id="resultSentencesList"></ol>
+            <div class="sentences-review__actions">
+              <button type="button" class="btn btn--ghost" id="addSentenceBtn">+ Agregar oración</button>
+              <button type="button" class="btn btn--accent" id="generateMoreSentencesBtn">✨ Generar 5 con IA</button>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="review-step" id="resultScenesBlock" data-review-step="scenes" hidden>
+        <summary class="review-step__summary">
+          <span class="review-step__title">2. Ilustrar y narrar escenas</span>
+          <span class="step-badge" data-review-status="scenes">Pendiente</span>
+        </summary>
+        <div class="result-scenes">
+          <div class="result-scenes__head">
+            <div class="result-scenes__hint" id="resultScenesHint">La IA divide el cuento en escenas, dibuja cada una con el mismo personaje y narra cada una con su propio audio. El robot cambia de imagen al terminar cada audio. Es necesario para guardar el cuento.</div>
+            <button type="button" class="btn btn--accent" id="generateScenesBtn">✨ Generar escenas</button>
+          </div>
+          <div class="scenes-tone">
+            <label class="scenes-tone__label" for="scenesTone">Tono de las imágenes</label>
+            <select class="scenes-tone__select" id="scenesTone">
+              <option value="auto" data-hint="La IA elige el tono que mejor encaja con el cuento.">Automático (según el cuento)</option>
+              {% for tone in scene_tones %}
+              <option value="{{ tone.key }}" data-hint="{{ tone.hint }}">{{ tone.label }}</option>
+              {% endfor %}
+            </select>
+            <span class="scenes-tone__hint" id="scenesToneHint" aria-live="polite"></span>
+          </div>
+          <div class="scenes-progress" id="scenesProgress" hidden>
+            <div class="scenes-progress__label">
+              <span id="scenesProgressText" aria-live="polite">Analizando el cuento…</span>
+              <span class="scenes-progress__count" id="scenesProgressCount"></span>
+            </div>
+            <div class="scenes-progress__track" id="scenesProgressTrack" role="progressbar" aria-label="Progreso de las escenas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="scenes-progress__fill" id="scenesProgressFill"></div>
+            </div>
+          </div>
+          <p class="questions-review-note" id="scenesStale" hidden>Cambiaste el texto después de crear las escenas. Vuelve a generarlas para que coincidan con el cuento.</p>
+          <ol class="scenes-grid" id="scenesGrid"></ol>
+        </div>
+      </details>
+
+      <details class="review-step" id="resultQuestionsColumn" data-review-step="questions">
+        <summary class="review-step__summary">
+          <span class="review-step__title">3. Generar preguntas</span>
+          <span class="step-badge" data-review-status="questions">Pendiente</span>
+        </summary>
+        <div class="result-col">
+          <p class="questions-review-note">Gemini propone. Revisa y modifica lo que necesites antes de aprobar.</p>
+          {% for q in question_configuration %}
+          <div class="question-row question-row--{{ q.key }}">
+            <label class="question-row__label" for="questionCount-{{ q.key }}">{{ q.label }}</label>
+            <input type="number" id="questionCount-{{ q.key }}" min="0" max="15" value="{{ q.default }}" class="question-row__input" data-question-type="{{ q.key }}">
+          </div>
+          {% endfor %}
+          <button type="button" class="btn btn--accent btn--block" id="generateQuestionsBtn">✨ Generar preguntas</button>
+          <div class="questions-result" id="questionsResult"></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="result-modal__footer">
+      <p class="result-modal__requirements" id="reviewRequirements" role="status" aria-atomic="true"></p>
+      <button type="button" class="btn btn--ghost" id="resultCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn--ghost" id="resultBackBtn" hidden>Atrás</button>
+      <button type="button" class="btn btn--primary" id="resultDoneBtn" aria-describedby="reviewRequirements" disabled>Continuar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay overlay--top" id="sceneEditOverlay">
+  <form class="scene-edit" id="sceneEditForm" role="dialog" aria-modal="true" aria-labelledby="sceneEditTitle">
+    <div class="upload-modal__title" id="sceneEditTitle">Editar imagen</div>
+    <div class="scene-edit__preview">
+      <img id="sceneEditImage" alt="">
+    </div>
+    <p class="scene-edit__context" id="sceneEditContext"></p>
+    <label class="story-field scene-edit__field">
+      <span>¿Qué quieres cambiar de la imagen?</span>
+      <textarea id="sceneEditInstruction" required maxlength="500" rows="3" placeholder="Ej.: que la zorrita lleve una bufanda roja y que el cielo sea de atardecer"></textarea>
+      <small>La IA cambia solo lo que pidas y mantiene el resto de la imagen.</small>
+    </label>
+    <p class="scene-edit__error" id="sceneEditError" role="alert" hidden></p>
+    <div class="upload-modal__actions">
+      <button type="button" class="btn btn--ghost" id="sceneEditCancelBtn">Cancelar</button>
+      <button type="submit" class="btn btn--primary" id="sceneEditApplyBtn">Aplicar cambios</button>
+    </div>
+  </form>
+</div>
+
+<div class="overlay" id="imageDesignOverlay">
+  <div class="upload-modal image-design" role="dialog" aria-modal="true" aria-labelledby="imageDesignTitle">
+    <div class="upload-modal__title editable-title" id="imageDesignTitle" contenteditable="true" spellcheck="false" role="textbox" aria-label="Nombre del material" title="Toca para editar el nombre del material">Diseño de las oraciones con imágenes</div>
+    <p class="upload-modal__hint image-design__intro">Revisa cada oración, ajusta sus palabras y elige si quieres regenerar o subir tus propias imágenes.</p>
+
+    <div class="image-design__nav" aria-label="Navegación entre oraciones">
+      <button type="button" class="btn btn--ghost" id="imageDesignPrevBtn">Anterior</button>
+      <span class="image-design__counter" id="imageDesignCounter" aria-live="polite">Oración 0 de 0</span>
+      <button type="button" class="btn btn--ghost" id="imageDesignNextBtn">Siguiente</button>
+    </div>
+
+    <div class="image-design__stage" id="imageDesignStage" hidden>
+      <div class="image-design__line" id="imageDesignMixedLine" aria-label="Vista previa de la oración con imágenes"></div>
+      <div class="image-design__noun-controls" id="imageDesignNounControls"></div>
+      <button type="button" class="image-design__remove" id="imageDesignRemoveBtn">Quitar esta oración</button>
+    </div>
+    <p class="image-design__empty" id="imageDesignEmpty" hidden>No quedan oraciones en el diseño. Vuelve para agregar otra antes de guardar.</p>
+
+    <div class="image-design__footer">
+      <button type="button" class="btn btn--ghost" id="imageDesignBackBtn">Volver</button>
+      <button type="button" class="btn btn--ghost image-design__discard" id="imageDesignDiscardBtn">Descartar</button>
+      <button type="button" class="btn btn--primary" id="imageDesignSaveBtn" disabled>Continuar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="bitsDesignOverlay">
+  <div class="upload-modal image-design" role="dialog" aria-modal="true" aria-labelledby="bitsDesignTitle">
+    <div class="upload-modal__title editable-title" id="bitsDesignTitle" contenteditable="true" spellcheck="false" role="textbox" aria-label="Nombre del material" title="Toca para editar el nombre del material">Diseño de los bits</div>
+    <p class="upload-modal__hint image-design__intro">Revisa cada palabra, ajusta su imagen y elige si quieres regenerarla o subir la tuya.</p>
+
+    <div class="image-design__nav" aria-label="Navegación entre bits">
+      <button type="button" class="btn btn--ghost" id="bitsDesignPrevBtn">Anterior</button>
+      <span class="image-design__counter" id="bitsDesignCounter" aria-live="polite">Bit 0 de 0</span>
+      <button type="button" class="btn btn--ghost" id="bitsDesignNextBtn">Siguiente</button>
+    </div>
+
+    <div class="image-design__stage" id="bitsDesignStage" hidden>
+      <img class="image-design__bit-img" id="bitsDesignImage" alt="">
+      <div class="image-design__noun-controls image-design__noun-controls--single" id="bitsDesignNounControls"></div>
+      <button type="button" class="image-design__remove" id="bitsDesignRemoveBtn">Quitar este bit</button>
+    </div>
+    <p class="image-design__empty" id="bitsDesignEmpty" hidden>No quedan bits en el diseño. Vuelve para agregar otro antes de guardar.</p>
+
+    <div class="image-design__footer">
+      <button type="button" class="btn btn--ghost" id="bitsDesignBackBtn">Volver</button>
+      <button type="button" class="btn btn--ghost image-design__discard" id="bitsDesignDiscardBtn">Descartar</button>
+      <button type="button" class="btn btn--primary" id="bitsDesignSaveBtn" disabled>Continuar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="classifyOverlay">
+  <div class="upload-modal" role="dialog" aria-modal="true" aria-labelledby="classifyModalTitle">
+    <div class="upload-modal__title" id="classifyModalTitle">Periodo y tema del material</div>
+    <p class="upload-modal__hint" id="classifySubtitle">Último paso antes de guardar «<span id="classifyMaterialTitle"></span>».</p>
+
+    <div class="upload-modal__period" data-period-filter data-period-nav="false" role="group" aria-label="Periodo y tema del material">
+      <div class="upload-modal__period-row">
+        <label class="upload-modal__field" for="uploadPeriodoYearSelect">
+          <span class="upload-modal__sublabel">Año</span>
+          <select class="upload-modal__select" id="uploadPeriodoYearSelect" data-period-year>
+            {% for anio in periodos | map(attribute='anio') | unique | sort %}
+            <option value="{{ anio }}"{% if current_periodo_anio == anio %} selected{% endif %}>{{ anio }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="upload-modal__field" for="uploadPeriodoSelect">
+          <span class="upload-modal__sublabel">Periodo</span>
+          <select class="upload-modal__select" id="uploadPeriodoSelect" name="id_periodo" data-period-select>
+            <option value="" disabled{% if current_periodo_id is none %} selected{% endif %}>Selecciona un periodo</option>
+            {% for p in periodos %}
+            <option value="{{ p.id }}" data-anio="{{ p.anio }}"{% if current_periodo_id == p.id %} selected{% endif %}>{{ p.nombre }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="upload-modal__field upload-modal__field--wide" for="uploadTemaSelect">
+          <span class="upload-modal__sublabel">Tema</span>
+          <select class="upload-modal__select" id="uploadTemaSelect" name="id_tema" required aria-describedby="uploadTemaHint">
+            <option value="" disabled selected>Selecciona un tema</option>
+            {% for t in temas %}
+            <option value="{{ t.id }}" data-periodo="{{ t.id_periodo }}">{{ t.nombre }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+      <p class="upload-modal__hint" id="uploadTemaHint">Todo material debe tener un periodo y un tema. Los temas disponibles corresponden al periodo elegido; si falta el tema, créalo en la sección Temas.</p>
+    </div>
+
+    <div class="upload-modal__actions">
+      <button type="button" class="btn btn--ghost" id="classifyBackBtn">Volver</button>
+      <button type="button" class="btn btn--primary" id="classifySaveBtn" disabled>Guardar material</button>
+    </div>
+  </div>
+</div>
+
+<div class="material__list" id="materialList">
+  {% if not materials %}
+  <div class="empty-state">
+    <span aria-hidden="true">◎</span>
+    <strong>Aún no hay materiales</strong>
+    <p>Crea un cuento con Gemini o sube el primer documento de la docente.</p>
+  </div>
+  {% endif %}
+  {% for m in materials %}
+  <div class="material-card" data-title="{{ m.nombre_material|lower }}" data-tipo="{{ m.tipo_material }}">
+    <button type="button" class="material-card__header">
+      <div class="material-card__icon" style="background: #eaf0fd; color: #2f5bcf">{{ '📇' if m.es_bits else ('🖼️' if m.es_oracion_imagen else ('✏️' if m.es_oracion else '📖')) }}</div>
+      <div class="material-card__meta">
+        <div class="material-card__name">{{ m.nombre_material }}</div>
+        <div class="material-card__sub">
+          {{ 'Bits' if m.es_bits else ('Oraciones con imágenes' if m.es_oracion_imagen else ('Oraciones' if m.es_oracion else 'Cuento')) }} · Subido {{ m.fecha_subido.strftime('%d/%m/%Y') }}
+          {% if m.duracion_objetivo_minutos %} · Objetivo {{ m.duracion_objetivo_minutos }} min{% endif %}
+          {% if m.duracion_audio_segundos %} · Audio {{ '%.1f'|format((m.duracion_audio_segundos|float) / 60) }} min{% endif %}
+        </div>
+      </div>
+      <span class="material-card__tags">
+        {% if m.periodo %}
+        <span class="material-card__tag">{{ m.periodo.nombre }}</span>
+        {% else %}
+        <span class="material-card__tag material-card__tag--conversation">Sin periodo</span>
+        {% endif %}
+        {% if m.tema %}
+        <span class="material-card__tag material-card__tag--tema">Tema: {{ m.tema.nombre }}</span>
+        {% endif %}
+      </span>
+      <span class="material-card__chevron">▼</span>
+    </button>
+    <div class="material-card__detail">
+      {% if m.es_oracion or m.es_oracion_imagen %}
+      {% set sentences = sentences_by_material.get(m.id, []) %}
+      {% if m.es_oracion_imagen %}
+      <div class="material-card__slider" data-slider>
+        <button type="button" class="material-card__slider-nav material-card__slider-nav--prev" data-slider-prev aria-label="Oración anterior">‹</button>
+        <ol class="material-card__slider-track" data-slider-track>
+          {% for oracion in image_sentences_by_material.get(m.id, []) %}
+          <li class="material-card__slide">
+            <div class="material-card__slide-inner">
+              {% for part in oracion.parts %}
+                {% if part.type == "image" and part.imagen_url %}
+                <img class="material-card__slide-img" src="{{ part.imagen_url }}" alt="{{ part.palabra }}">
+                {% elif part.type == "image" %}
+                <mark>{{ part.palabra }}</mark>
+                {% else %}{{ part.value }}{% endif %}
+              {% endfor %}
+            </div>
+          </li>
+          {% endfor %}
+        </ol>
+        <button type="button" class="material-card__slider-nav material-card__slider-nav--next" data-slider-next aria-label="Siguiente oración">›</button>
+      </div>
+      {% else %}
+      <ol class="material-card__sentence-list">
+        {% for sentence in sentences %}
+        <li>{{ sentence }}</li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+      <div class="material-card__actions">
+        <span class="material-card__sentence-count">{{ sentences|length }} {{ 'oraciones' if sentences|length != 1 else 'oración' }}</span>
+        <button type="button" class="material-card__delete" data-material-id="{{ m.id }}" data-material-name="{{ m.nombre_material }}">🗑 Eliminar</button>
+      </div>
+      {% elif m.es_bits %}
+      {% set bits_items = bits_by_material.get(m.id, []) %}
+      <div class="material-card__slider" data-slider>
+        <button type="button" class="material-card__slider-nav material-card__slider-nav--prev" data-slider-prev aria-label="Bit anterior">‹</button>
+        <ol class="material-card__slider-track" data-slider-track>
+          {% for bit in bits_items %}
+          <li class="material-card__slide">
+            <div class="material-card__slide-inner">
+              {% if bit.imagen_url %}<img class="material-card__slide-img" src="{{ bit.imagen_url }}" alt="{{ bit.palabra }}">{% endif %}
+              <div>{{ bit.palabra }}</div>
+            </div>
+          </li>
+          {% endfor %}
+        </ol>
+        <button type="button" class="material-card__slider-nav material-card__slider-nav--next" data-slider-next aria-label="Siguiente bit">›</button>
+      </div>
+      <div class="material-card__actions">
+        <span class="material-card__sentence-count">{{ bits_items|length }} {{ 'bits' if bits_items|length != 1 else 'bit' }}</span>
+        <button type="button" class="material-card__delete" data-material-id="{{ m.id }}" data-material-name="{{ m.nombre_material }}">🗑 Eliminar</button>
+      </div>
+      {% else %}
+      <div class="material-card__audio-row">
+        <div class="material-card__audio-label">Audio completo</div>
+        <audio controls src="{{ media_url(m.path_audio) }}"></audio>
+      </div>
+      <div class="material-card__actions">
+        <div class="material-card__links">
+          <a href="{{ media_url(m.path_texto) }}" download>📄 Descargar texto completo</a>
+          <a href="{{ media_url(m.path_texto_resumen) }}" download>📄 Descargar texto resumido</a>
+          <a href="{{ media_url(m.path_preguntas) }}" download>❓ Preguntas generadas</a>
+        </div>
+        <button type="button" class="material-card__delete" data-material-id="{{ m.id }}" data-material-name="{{ m.nombre_material }}">🗑 Eliminar</button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/period_filter.js') }}"></script>
+<script src="{{ url_for('static', filename='js/material.js') }}"></script>
+{% endblock %}

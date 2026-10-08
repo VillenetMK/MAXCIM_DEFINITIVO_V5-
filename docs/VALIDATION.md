@@ -1,0 +1,39 @@
+# Evidencia de validación
+
+Entrega preparada el 8 de octubre de 2026. Las fechas del código importado no prueban que un ensayo se haya realizado en esas fechas. Esta entrega tampoco demuestra resultados obtenidos entre enero y julio para la tesis.
+
+| Comprobación | Resultado |
+|---|---|
+| API/control/catálogo/callbacks ROS con dobles | 38 pruebas Python aprobadas |
+| Protocolo, cinemática, seguridad y odometría de la base recuperada | 85 pruebas Python aprobadas |
+| Firmware Nano, núcleo nativo C++ | Aprobado con `-Wall -Wextra -Werror -pedantic` |
+| Sketch ESP32 V5 con dobles Serial/PCA9685 | Aprobado: parser, inicio deshabilitado, INIT, STOP, ID de grupo, rangos y watchdog |
+| Sintaxis de API, paquetes y educación | compileall aprobado |
+| JavaScript del panel | node --check aprobado |
+| Instalación editable del paquete Python | Aprobada sin dependencias adicionales |
+| Recorrido Chromium | Script preparado; no ejecutado localmente por falta de binario de navegador |
+| Compilación ROS, mensajes generados y DDS | Pendiente: ROS/colcon no disponibles en este entorno |
+| Aplicación educativa Flask, DB y APIs | Pendiente: dependencias no disponibles y servicios no conectados |
+| Compilación Arduino/ESP32 y flasheo | Pendiente; el banco nativo no utiliza el SDK real |
+| Robot, LiDAR, cámara, audio y parada eléctrica | Pendiente: sin conexión física al robot |
+
+Las 123 pruebas Python comprueban exclusión de operadores/pestañas, expiración de mando, orden atrasada después de frenar, enclavamiento, roles, CSRF, logout sin gateway, revocación de WebSocket, conflicto de tareas y catálogo real. También prueban que una respuesta vieja de ESP32 no confirme un grupo nuevo y que la voz no adquiera ni eluda el control del operador.
+
+## Repetir
+
+```bash
+bash scripts/check.sh
+```
+
+El recorrido del navegador usa `scripts/browser-check.cjs` y una cuenta temporal externa; no incluye claves en el repositorio. La CI preparada instala el navegador y ensaya login, avance mantenido, frenado, emergencia/rearme, dos pestañas, tareas/notas, vista móvil y logout. Consultar el resultado de Actions; la existencia del workflow no significa que haya pasado.
+
+## Bloqueos para una entrega física
+
+1. Confirmar SO/ROS/JetPack, identidad de dispositivos y puertos.
+2. Calibrar ruedas/FG/PI y servos; confirmar el cableado y sentido del Nano nuevo.
+3. Compilar y probar interfaces ROS reales, ACK serie y watchdogs con alimentación controlada.
+4. Medir geometría LiDAR/cámara, envolvente de brazos y distancia de frenado; verificar parada eléctrica.
+5. Configurar y probar servicios educativos/conversación sin usar resultados de demo como resultados reales.
+6. Integrar Nav2 únicamente a través de una autorización del gateway; permanece como referencia heredada.
+
+Estas tareas están pendientes, no escondidas detrás de indicadores verdes. Registrar sus resultados en la bitácora junto con la revisión git utilizada.

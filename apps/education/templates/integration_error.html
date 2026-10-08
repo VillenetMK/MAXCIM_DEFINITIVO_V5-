@@ -1,0 +1,14 @@
+{% extends "app_shell.html" %}
+
+{% block title %}Conexión institucional · MAXCIM{% endblock %}
+
+{% block content %}
+<section class="integration-state" role="alert">
+  <div class="integration-state__icon">!</div>
+  <p class="page-heading__eyebrow">Fuente institucional</p>
+  <h1>Los datos reales no están disponibles</h1>
+  <p>{{ message }}</p>
+  <p class="integration-state__note">MAXCIM no mostrará registros inventados. Vuelve a intentarlo cuando la API institucional esté disponible.</p>
+  <a class="btn btn--primary" href="{{ request.path }}">Reintentar conexión</a>
+</section>
+{% endblock %}

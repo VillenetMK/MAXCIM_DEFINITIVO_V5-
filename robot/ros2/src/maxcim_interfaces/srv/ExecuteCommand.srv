@@ -1,0 +1,7 @@
+string owner
+string command
+string payload_json
+---
+bool accepted
+string message
+string state_json

@@ -1,0 +1,69 @@
+{% extends "app_shell.html" %}
+
+{% block title %}Tablón · MAXCIM{% endblock %}
+
+{% block content %}
+<div class="dashboard-view">
+  <header class="dashboard-heading">
+    <div>
+      <p class="page-heading__eyebrow">Portal docente</p>
+      <h1>Tablón de aulas</h1>
+      <p>Consulta el avance y las respuestas de tus estudiantes.</p>
+    </div>
+    <div class="content__date">{{ today_label }} <span aria-hidden="true">·</span> {{ periodo_label }}</div>
+  </header>
+
+  <section class="stat-grid" aria-label="Resumen del periodo">
+    {% for card in stat_cards %}
+    <div class="stat-card" style="--accent: {{ card.color }}">
+      <div class="stat-card__value">{{ card.value }}</div>
+      <div class="stat-card__label">{{ card.label }}</div>
+    </div>
+    {% endfor %}
+  </section>
+
+  <section class="aulas" aria-labelledby="aulasTitle">
+    <div class="aulas__heading">
+      <div>
+        <p class="page-heading__eyebrow">Aulas asignadas</p>
+        <h2 class="aulas__title" id="aulasTitle">Mis aulas</h2>
+      </div>
+      {% if aulas %}<span>{{ aulas|length }} aula{{ '' if aulas|length == 1 else 's' }}</span>{% endif %}
+    </div>
+    <div class="aulas__grid">
+      {% if not aulas %}
+      <div class="empty-state empty-state--card">
+        <span aria-hidden="true">◎</span>
+        <strong>No hay aulas asignadas</strong>
+        <p>Cuando tengas aulas activas, aparecerán aquí para que puedas consultar su avance.</p>
+      </div>
+      {% endif %}
+      {% for aula in aulas %}
+      <a class="aula-card aula-card--link" href="{{ url_for('classroom_detail', ref=classroom_ref(aula.id)) }}" aria-label="Abrir el aula {{ aula.name }}">
+        <div class="aula-card__header">
+          <div class="aula-card__avatar" aria-hidden="true">{{ aula.initials }}</div>
+          <div class="aula-card__meta">
+            <h3 class="aula-card__name">{{ aula.name }}</h3>
+            <div class="aula-card__grade">
+              {{ aula.grade or 'Grado no informado' }}
+              {% if aula.course %} · {{ aula.course }}{% endif %}
+              {% if aula.period %} · {{ aula.period }}{% endif %}
+            </div>
+          </div>
+          <span class="aula-card__arrow" aria-hidden="true">→</span>
+        </div>
+
+        <div class="aula-card__badges">
+          <span class="badge badge--score">{{ (aula.score ~ '% promedio') if aula.score is not none else 'Sin evaluaciones aprobadas' }}</span>
+          <span class="badge badge--pending">{{ aula.pending }} pendiente{{ 's' if aula.pending != 1 else '' }}</span>
+        </div>
+
+        <div class="aula-card__real-summary">
+          <span class="aula-card__cta">Entrar al aula</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

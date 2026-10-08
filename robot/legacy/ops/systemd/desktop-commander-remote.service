@@ -1,0 +1,21 @@
+[Unit]
+Description=Desktop Commander Remote for MAX Raspberry Pi
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+ExecStart=/usr/bin/node %h/.local/share/desktop-commander/runtime/node_modules/@wonderwhy-er/desktop-commander/dist/index.js remote
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/run/user/%U/gdm/Xauthority
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+Restart=always
+RestartSec=10
+TimeoutStopSec=20
+KillSignal=SIGTERM
+UMask=0077
+
+[Install]
+WantedBy=default.target

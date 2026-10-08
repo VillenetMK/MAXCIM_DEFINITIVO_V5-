@@ -1,0 +1,66 @@
+{% extends "app_shell.html" %}
+
+{% block title %}{{ classroom.name }} · MAXCIM{% endblock %}
+
+{% block content %}
+<div class="teacher-view">
+  <header class="page-heading teacher-heading">
+    <div>
+      <p class="page-heading__eyebrow"><a href="{{ url_for('dashboard') }}">Mis aulas</a> <span aria-hidden="true">/</span> Lista de estudiantes</p>
+      <h1 class="sesiones__title">{{ classroom.name }}</h1>
+      <p class="page-heading__description">
+        {{ classroom.grade or 'Grado no informado' }}
+        {% if classroom.course %} · {{ classroom.course }}{% endif %}
+        {% if classroom.period %} · {{ classroom.period }}{% endif %}
+      </p>
+    </div>
+    <a class="btn btn--primary teacher-heading__action" href="{{ url_for('classroom_progress', ref=classroom_ref(classroom.institutional_id)) }}">
+      Ver avance del aula <span aria-hidden="true">→</span>
+    </a>
+  </header>
+
+  <section class="sessions-history teacher-panel" aria-labelledby="studentsTitle">
+    <div class="sessions-history__header">
+      <div>
+        <p class="page-heading__eyebrow">Matrícula institucional</p>
+        <h2 id="studentsTitle">Estudiantes</h2>
+      </div>
+      <span class="panel-count">{{ students|length }} estudiante{{ '' if students|length == 1 else 's' }}</span>
+    </div>
+
+    {% if students %}
+    <div class="sessions-table-wrap" tabindex="0" role="region" aria-label="Lista de estudiantes; desplázate horizontalmente para ver todas las columnas">
+      <table class="sessions-table classroom-table">
+        <caption class="visually-hidden">Lista de estudiantes de {{ classroom.name }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Apellidos</th>
+            <th scope="col">Nombres</th>
+            <th scope="col" class="table-action-column">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          <tr class="table-row--clickable">
+            <td>
+              <a class="table-row-link" href="{{ url_for('student_detail', ref=student_ref(classroom.institutional_id, student.institutional_id)) }}" aria-label="Ver las respuestas de {{ student.full_name }}">
+                <strong>{{ student.apellidos }}</strong>
+              </a>
+            </td>
+            <td>{{ student.nombres }}</td>
+            <td class="table-action-column"><span class="table-action">Ver respuestas <span aria-hidden="true">→</span></span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <span aria-hidden="true">◎</span>
+      <strong>Esta aula aún no tiene estudiantes</strong>
+      <p>Cuando se registre una matrícula activa, la lista aparecerá aquí.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

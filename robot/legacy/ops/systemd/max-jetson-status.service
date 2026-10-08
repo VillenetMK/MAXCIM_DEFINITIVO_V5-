@@ -1,0 +1,20 @@
+[Unit]
+Description=MAX Studio - estado, medios en vivo y enlace de voz de Jetson
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c 'source /opt/ros/jazzy/setup.bash; exec /usr/bin/python3 "$HOME/.local/share/max-studio-jetson/jetson_agent.py" --host 127.0.0.1 --host 192.168.1.118'
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+Environment=ROS_DOMAIN_ID=0
+Environment=ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+RuntimeDirectory=max-studio-ros-log
+Environment=ROS_LOG_DIR=%t/max-studio-ros-log
+
+[Install]
+WantedBy=default.target

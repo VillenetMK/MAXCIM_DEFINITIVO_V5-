@@ -1,0 +1,1 @@
+"""API colaborativa de MAXCIM."""

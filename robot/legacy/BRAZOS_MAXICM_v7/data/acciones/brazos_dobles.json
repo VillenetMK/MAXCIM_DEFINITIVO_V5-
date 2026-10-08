@@ -1,0 +1,28 @@
+{
+    "EXTENDER-DOS-BRAZOS": {
+        "name": "EXTENDER-DOS-BRAZOS",
+        "mode": "parallel",
+        "sequence": [
+            "B1-EXT",
+            "B2-EXT"
+        ],
+        "wait": 2.0,
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    },
+    "HOME-DOS-BRAZOS": {
+        "name": "HOME-DOS-BRAZOS",
+        "mode": "parallel",
+        "sequence": [
+            "HOME-CH0",
+            "HOME-CH1",
+            "HOME-CH2",
+            "HOME-CH4",
+            "HOME-CH5",
+            "HOME-CH6"
+        ],
+        "wait": 2.5,
+        "created_at": "2026-05-29 10:00:00",
+        "updated_at": "2026-05-29 10:00:00"
+    }
+}
